@@ -37,6 +37,10 @@ func Router(w http.ResponseWriter, r *http.Request) {
 		handler = Post(routes.Login)
 	case Match(path, "/fav"):
 		handler = Post(routes.Fav)
+	case Match(path, "/fav/([^/]+)", &slug):
+		handler = Get(routes.Favourite{Token: slug}.GetFav)
+	case Match(path, "/Delfav"):
+		handler = Post(routes.DelFav)
 	default:
 		http.NotFound(w, r)
 		return
@@ -80,14 +84,6 @@ func Get(handler http.HandlerFunc) http.HandlerFunc {
 
 func Post(handler http.HandlerFunc) http.HandlerFunc {
 	return allowMethod(handler, post)
-}
-
-func Delete(handler http.HandlerFunc) http.HandlerFunc {
-	return allowMethod(handler, delete)
-}
-
-func Put(handler http.HandlerFunc) http.HandlerFunc {
-	return allowMethod(handler, put)
 }
 
 func allowMethod(handler http.HandlerFunc, method string) http.HandlerFunc {
