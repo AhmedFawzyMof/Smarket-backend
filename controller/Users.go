@@ -3,7 +3,8 @@ package controller
 import (
 	"crypto/sha256"
 	"database/sql"
-	"strings"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -22,6 +23,24 @@ type user struct {
 	role        string
 }
 
+func verifyToken(tokenString string) (jwt.MapClaims, error) {
+	var sampleSecretKey = []byte("Ahmedfawzi made this website")
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return sampleSecretKey, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		return claims, nil
+	} else {
+		return nil, fmt.Errorf("invalid jwt token")
+	}
+}
+
 func generateJWT(email string, key []byte) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": email,
@@ -34,15 +53,15 @@ func generateJWT(email string, key []byte) (string, error) {
 	return tokenString, nil
 }
 
-func AddUser(db *sql.DB, userData map[string]string) map[string]interface{} {
-	var username string = userData["username"]
-	var email string = userData["email"]
-	newEmail := strings.Replace(email, "%40", "@", 1)
-	var password string = userData["password"]
-	var password2 string = userData["password2"]
-	var phone string = userData["phone"]
-	var spare_phone string = userData["spare_phone"]
-	var terms string = userData["terms"]
+func AddUser(db *sql.DB, userData map[string]interface{}) map[string]interface{} {
+	var username string = fmt.Sprintf("%v", userData["username"])
+	var email string = fmt.Sprintf("%v", userData["email"])
+	var password string = fmt.Sprintf("%v", userData["password"])
+	var password2 string = fmt.Sprintf("%v", userData["password2"])
+	var phone string = fmt.Sprintf("%v", userData["phone"])
+	var spare_phone string = fmt.Sprintf("%v", userData["spare_phone"])
+	var terms string = fmt.Sprintf("%v", userData["terms"])
+	fmt.Println(username, email, password, password2, phone, spare_phone)
 	id := uuid.New()
 	if password != password2 {
 		ErrorRes := map[string]interface{}{
@@ -65,19 +84,17 @@ func AddUser(db *sql.DB, userData map[string]string) map[string]interface{} {
 	FindEmail := db.QueryRow("SELECT * FROM Users WHERE email=?", email)
 
 	var User user
-	err := FindEmail.Scan(&User.id, &User.username, &User.email, &User.password, &User.password, &User.phone, &User.spare_phone, &User.role)
+	err := FindEmail.Scan(&User.id, &User.username, &User.email, &User.password, &User.phone, &User.spare_phone, &User.role)
 	sha := sha256.New()
 	sha.Write([]byte(password))
 	pass := sha.Sum(nil)
+	Password := fmt.Sprintf("%x", pass)
 	if err != nil {
-		_, err := db.Exec("INSERT INTO Users (id, username, email, password, phone, spare_phone, role) VALUES (?, ?, ?, ?, ?, ?, ?)", id, username, newEmail, string(pass), phone, spare_phone, "Normal")
+		_, err := db.Exec("INSERT INTO Users (id, username, email, password, phone, spare_phone, role) VALUES (?, ?, ?, ?, ?, ?, ?)", id, username, email, Password, phone, spare_phone, "Normal")
 		if err != nil {
-			userRes := map[string]interface{}{
-				"Error":   true,
-				"Message": "البريد الإلكتروني مستخدم بالفعل",
-			}
-			return userRes
+			panic(err.Error())
 		}
+
 	}
 	token, err := generateJWT(email, sampleSecretKey)
 	if err != nil {
@@ -95,17 +112,18 @@ func AddUser(db *sql.DB, userData map[string]string) map[string]interface{} {
 	return userRes
 }
 
-func GetUser(db *sql.DB, userData map[string]string) map[string]interface{} {
-	var email string = userData["email"]
-	var password string = userData["password"]
-
+func GetUser(db *sql.DB, userData map[string]interface{}) map[string]interface{} {
+	var email string = fmt.Sprintf("%v", userData["email"])
+	var password string = fmt.Sprintf("%v", userData["password"])
 	sha := sha256.New()
 	sha.Write([]byte(password))
 	pass := sha.Sum(nil)
+	Password := fmt.Sprintf("%x", pass)
 
-	FindEmail := db.QueryRow("SELECT * FROM Users WHERE (email, password) = (?, ?)", email, pass)
+	FindEmail := db.QueryRow("SELECT * FROM Users WHERE (email, password) = (?, ?)", email, Password)
 	var User user
-	err := FindEmail.Scan(&User.id, &User.username, &User.email, &User.password, &User.password, &User.phone, &User.spare_phone, &User.role)
+
+	err := FindEmail.Scan(&User.id, &User.username, &User.email, &User.password, &User.phone, &User.spare_phone, &User.role)
 
 	token, Err := generateJWT(email, sampleSecretKey)
 	if Err != nil {
@@ -116,18 +134,168 @@ func GetUser(db *sql.DB, userData map[string]string) map[string]interface{} {
 		return userRes
 	}
 
-	if err == nil {
+	if err != nil {
 		theUser := map[string]interface{}{
-			"Error": false,
-			"token": token,
+			"Error":   true,
+			"Message": "لا يمكن تسجيل الدخول ببيانات المقدمة",
 		}
 		return theUser
 	}
 
 	theUser := map[string]interface{}{
-		"Error":   true,
-		"Message": "لا يمكن تسجيل الدخول ببيانات المقدمة",
+		"Error": false,
+		"token": token,
+	}
+	return theUser
+}
+
+func GetUserInfo(db *sql.DB, token string) map[string]interface{} {
+	claims, err := verifyToken(token)
+	if err != nil {
+		UserRes := map[string]interface{}{
+			"Error": true,
+		}
+		return UserRes
+	}
+	var tm time.Time
+	switch iat := claims["exp"].(type) {
+	case float64:
+		tm = time.Unix(int64(iat), 0)
+	case json.Number:
+		v, _ := iat.Int64()
+		tm = time.Unix(v, 0)
 	}
 
-	return theUser
+	if tm == time.Now() {
+		UserRes := map[string]interface{}{
+			"Error": true,
+		}
+		return UserRes
+	}
+
+	FindEmail := db.QueryRow("SELECT * FROM Users WHERE email = ?", claims["email"])
+
+	var User user
+
+	Err := FindEmail.Scan(&User.id, &User.username, &User.email, &User.password, &User.phone, &User.spare_phone, &User.role)
+
+	if Err != nil {
+		UserRes := map[string]interface{}{
+			"Error": true,
+		}
+		return UserRes
+	}
+	UserRes := map[string]interface{}{
+		"username": User.username,
+		"email":    User.email,
+	}
+	return UserRes
+}
+
+func EditUserInfo(db *sql.DB, userData map[string]interface{}) map[string]interface{} {
+
+	token := fmt.Sprintf("%v", userData["token"])
+	_, foundUsername := userData["username"]
+	_, foundPassword := userData["password2"]
+	_, foundEmail := userData["email"]
+	password := fmt.Sprintf("%v", userData["password"])
+
+	claims, err := verifyToken(token)
+	if err != nil {
+		UserRes := map[string]interface{}{
+			"Error": true,
+		}
+		return UserRes
+	}
+	var tm time.Time
+	switch iat := claims["exp"].(type) {
+	case float64:
+		tm = time.Unix(int64(iat), 0)
+	case json.Number:
+		v, _ := iat.Int64()
+		tm = time.Unix(v, 0)
+	}
+
+	if tm == time.Now() {
+		UserRes := map[string]interface{}{
+			"Error": true,
+		}
+		return UserRes
+	}
+
+	curemail := claims["email"]
+
+	sha := sha256.New()
+	sha.Write([]byte(password))
+	pass := sha.Sum(nil)
+	Password := fmt.Sprintf("%x", pass)
+	FindEmail := db.QueryRow("SELECT id FROM Users WHERE (email, password) = (?, ?)", curemail, Password)
+	var User user
+
+	Err := FindEmail.Scan(&User.id)
+
+	if Err != nil {
+		UserRes := map[string]interface{}{
+			"Error": true,
+		}
+		return UserRes
+	}
+
+	if foundUsername {
+		username := fmt.Sprintf("%v", userData["username"])
+
+		_, err := db.Exec("UPDATE Users SET username=? WHERE id = ?", username, User.id)
+		if err != nil {
+			userRes := map[string]interface{}{
+				"Error": true,
+			}
+			return userRes
+		}
+
+		fmt.Println(err, username)
+
+		userRes := map[string]interface{}{
+			"Error": false,
+		}
+		return userRes
+	}
+
+	if foundEmail {
+		email := fmt.Sprintf("%v", userData["email"])
+		_, err := db.Exec("UPDATE Users SET email=? WHERE id = ?", email, User.id)
+		if err != nil {
+			userRes := map[string]interface{}{
+				"Error": true,
+			}
+			return userRes
+		}
+
+		userRes := map[string]interface{}{
+			"Error": false,
+		}
+		return userRes
+	}
+
+	if foundPassword {
+		Password := fmt.Sprintf("%v", userData["password2"])
+		sha := sha256.New()
+		sha.Write([]byte(Password))
+		newPass := sha.Sum(nil)
+		_, err := db.Exec("UPDATE Users SET password=? WHERE id = ?", string(newPass), User.id)
+		if err != nil {
+			userRes := map[string]interface{}{
+				"Error": true,
+			}
+			return userRes
+		}
+
+		userRes := map[string]interface{}{
+			"Error": false,
+		}
+		return userRes
+	}
+	userRes := map[string]interface{}{
+		"Error": true,
+	}
+	return userRes
 }

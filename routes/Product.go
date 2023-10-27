@@ -4,8 +4,8 @@ import (
 	"Smarket/controller"
 	DB "Smarket/db"
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"sync"
 )
 
 type ProductId struct {
@@ -20,19 +20,13 @@ func (p ProductId) GetById(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
-	Product := make(chan controller.Products, 1)
-	wg := &sync.WaitGroup{}
+	
+	Product := controller.ProductGetId(db, p.Id)
 
-	wg.Add(1)
-	go controller.ProductGetId(db, Product, wg, p.Id)
-
-	wg.Wait()
-	close(Product)
-
-	product := <-Product
+	fmt.Println(Product, p.Id)
 
 	var data = map[string]interface{}{
-		"product": product,
+		"product": Product,
 	}
 
 	json.NewEncoder(res).Encode(data)

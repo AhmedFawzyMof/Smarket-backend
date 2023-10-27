@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strings"
 )
 
 func Login(res http.ResponseWriter, req *http.Request) {
@@ -18,20 +17,18 @@ func Login(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusOK)
 
 	body, err := io.ReadAll(req.Body)
-	splitedBody := strings.Split(string(body), "&")
+
 	if err != nil {
 		panic(err)
 	}
 
-	theUser := make(map[string]string)
-
-	for _, data := range splitedBody {
-		key := strings.Split(data, "=")[0]
-		value := strings.Split(data, "=")[1]
-		theUser[key] = value
+	dataForm := make(map[string]interface{})
+	mapData := json.Unmarshal(body, &dataForm)
+	if mapData != nil {
+		panic(mapData.Error())
 	}
 
-	UserRes := controller.GetUser(db, theUser)
+	UserRes := controller.GetUser(db, dataForm)
 
 	json.NewEncoder(res).Encode(UserRes)
 }

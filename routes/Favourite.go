@@ -33,7 +33,6 @@ func Fav(res http.ResponseWriter, req *http.Request) {
 	}
 
 	FavRes := controller.AddToFav(db, dataForm)
-	
 
 	json.NewEncoder(res).Encode(FavRes)
 
@@ -56,8 +55,7 @@ func (f Favourite) GetFav(res http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(res).Encode(Res)
 }
 
-
-func DelFav(res http.ResponseWriter, req *http.Request){
+func DelFav(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()

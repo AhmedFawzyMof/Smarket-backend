@@ -8,14 +8,29 @@ import (
 	"net/http"
 )
 
-func Register(res http.ResponseWriter, req *http.Request) {
+type UserEmail struct {
+	Token string
+}
+
+func (u UserEmail) GetUserData(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()
 	res.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-
 	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusOK)
 
+	UserInfo := controller.GetUserInfo(db, u.Token)
+
+	json.NewEncoder(res).Encode(UserInfo)
+}
+
+func EditProfile(res http.ResponseWriter, req *http.Request) {
+	db := DB.Connect()
+
+	defer db.Close()
+	res.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
 	body, err := io.ReadAll(req.Body)
@@ -29,8 +44,7 @@ func Register(res http.ResponseWriter, req *http.Request) {
 	if mapData != nil {
 		panic(mapData.Error())
 	}
-
-	UserRes := controller.AddUser(db, dataForm)
+	UserRes := controller.EditUserInfo(db, dataForm)
 
 	json.NewEncoder(res).Encode(UserRes)
 }

@@ -41,6 +41,10 @@ func Router(w http.ResponseWriter, r *http.Request) {
 		handler = Get(routes.Favourite{Token: slug}.GetFav)
 	case Match(path, "/Delfav"):
 		handler = Post(routes.DelFav)
+	case Match(path, "/profile/([^/]+)", &slug):
+		handler = Get(routes.UserEmail{Token: slug}.GetUserData)
+	case Match(path, "/profile"):
+		handler = Post(routes.EditProfile)
 	default:
 		http.NotFound(w, r)
 		return

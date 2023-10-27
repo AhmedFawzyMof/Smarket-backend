@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
-
-	"github.com/golang-jwt/jwt"
 )
 
 type fav struct {
@@ -16,24 +14,6 @@ type fav struct {
 }
 
 type favProducts map[string]interface{}
-
-func verifyToken(tokenString string) (jwt.MapClaims, error) {
-	var sampleSecretKey = []byte("Ahmedfawzi made this website")
-
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return sampleSecretKey, nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
-	} else {
-		return nil, fmt.Errorf("invalid jwt token")
-	}
-}
 
 func AddToFav(db *sql.DB, favData map[string]interface{}) map[string]interface{} {
 	product := favData["product"]
