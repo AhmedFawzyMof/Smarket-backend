@@ -16,7 +16,7 @@ func (c CompanySlug) GetBySlug(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "https://beautiful-ruby-sheath-dress.cyclic.app/")
+	res.Header().Set("Access-Control-Allow-Origin", "https://wild-pear-millipede.cyclic.app/")
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
