@@ -145,38 +145,40 @@ func GetUserFav(db *sql.DB, token string) []favProducts {
 			}
 		}
 		var stmt string = fmt.Sprintf("SELECT * FROM Products WHERE id IN (%s)", ids)
+		if ids != "" {
+			products, err := db.Query(stmt)
 
-		products, err := db.Query(stmt)
-
-		if err != nil {
-			fmt.Println(stmt, err)
-		}
-
-		defer products.Close()
-
-		for products.Next() {
-			var Product product
-
-			if err := products.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock); err != nil {
-				panic(err.Error())
+			if err != nil {
+				fmt.Println(stmt, err)
 			}
 
-			TheProduct := map[string]interface{}{
-				"id":            Product.id,
-				"name":          Product.name,
-				"description":   Product.description,
-				"price":         Product.price,
-				"company":       Product.company,
-				"subcategories": Product.subcategories,
-				"category":      Product.category,
-				"image":         Product.image,
-				"unit":          Product.unit,
-				"available":     Product.available,
-				"offer":         Product.offer,
-				"inStock":       Product.inStock,
+			defer products.Close()
+
+			for products.Next() {
+				var Product product
+
+				if err := products.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock); err != nil {
+					panic(err.Error())
+				}
+
+				TheProduct := map[string]interface{}{
+					"id":            Product.id,
+					"name":          Product.name,
+					"description":   Product.description,
+					"price":         Product.price,
+					"company":       Product.company,
+					"subcategories": Product.subcategories,
+					"category":      Product.category,
+					"image":         Product.image,
+					"unit":          Product.unit,
+					"available":     Product.available,
+					"offer":         Product.offer,
+					"inStock":       Product.inStock,
+				}
+
+				FavProducts = append(FavProducts, TheProduct)
 			}
 
-			FavProducts = append(FavProducts, TheProduct)
 		}
 
 	}
