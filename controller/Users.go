@@ -61,7 +61,6 @@ func AddUser(db *sql.DB, userData map[string]interface{}) map[string]interface{}
 	var phone string = fmt.Sprintf("%v", userData["phone"])
 	var spare_phone string = fmt.Sprintf("%v", userData["spare_phone"])
 	var terms string = fmt.Sprintf("%v", userData["terms"])
-	fmt.Println(username, email, password, password2, phone, spare_phone)
 	id := uuid.New()
 	if password != password2 {
 		ErrorRes := map[string]interface{}{
@@ -94,7 +93,6 @@ func AddUser(db *sql.DB, userData map[string]interface{}) map[string]interface{}
 		if err != nil {
 			panic(err.Error())
 		}
-
 	}
 	token, err := generateJWT(email, sampleSecretKey)
 	if err != nil {

@@ -43,6 +43,10 @@ func Home(res http.ResponseWriter, req *http.Request) {
 		"Offers":     Offer,
 	}
 
+	ip := req.RemoteAddr
+
+	fmt.Println(ip)
+
 	json.NewEncoder(res).Encode(data)
 	excuteTime := time.Since(start)
 	fmt.Println(excuteTime)

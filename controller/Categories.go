@@ -5,8 +5,6 @@ import (
 	"sync"
 )
 
-
-
 type category struct {
 	name  string
 	image string
@@ -73,7 +71,7 @@ func CategoriesGetAllProducts(db *sql.DB, responseChan chan []Categories, wg *sy
 			"unit":          Product.unit,
 			"available":     Product.available,
 			"offer":         Product.offer,
-			"inStock":		 Product.inStock,
+			"inStock":       Product.inStock,
 		}
 
 		Products = append(Products, TheProduct)
