@@ -149,7 +149,7 @@ func GetUserFav(db *sql.DB, token string) []favProducts {
 		products, err := db.Query(stmt)
 
 		if err != nil {
-			panic(err.Error())
+			fmt.Println(stmt, err)
 		}
 
 		defer products.Close()
