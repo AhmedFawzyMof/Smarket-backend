@@ -16,7 +16,7 @@ func (u UserEmail) GetUserData(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	res.Header().Set("Access-Control-Allow-Origin", "https://beautiful-ruby-sheath-dress.cyclic.app/")
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
@@ -29,7 +29,7 @@ func EditProfile(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	res.Header().Set("Access-Control-Allow-Origin", "https://beautiful-ruby-sheath-dress.cyclic.app/")
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
@@ -53,7 +53,7 @@ func Register(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	res.Header().Set("Access-Control-Allow-Origin", "https://beautiful-ruby-sheath-dress.cyclic.app/")
 
 	res.Header().Set("Content-Type", "application/json")
 
@@ -80,7 +80,7 @@ func Login(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	res.Header().Set("Access-Control-Allow-Origin", "https://beautiful-ruby-sheath-dress.cyclic.app/")
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
