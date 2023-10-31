@@ -7,3 +7,5 @@ require github.com/golang-jwt/jwt v3.2.2+incompatible
 require github.com/google/uuid v1.4.0
 
 require github.com/go-sql-driver/mysql v1.7.1
+
+require github.com/mattn/go-sqlite3 v1.14.17

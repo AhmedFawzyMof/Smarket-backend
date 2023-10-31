@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-type Config struct {
-	databaseString string
-}
+// type Config struct {
+// 	databaseString string
+// }
 
 func Connect() *sql.DB {
 	// jsonFile, err := os.Open("config.json")
@@ -27,7 +27,7 @@ func Connect() *sql.DB {
 
 	// connectString := fmt.Sprintf("%v", config["databaseString"])
 
-	db, Err := sql.Open("mysql", "ssmarketahmed:ssmarketAhmed20@tcp(db4free.net:3306)/ssmarket?parseTime=true")
+	db, Err := sql.Open("sqlite3", "smarket.db")
 
 	if Err != nil {
 		panic(Err.Error())
