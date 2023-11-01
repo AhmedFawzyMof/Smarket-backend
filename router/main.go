@@ -43,8 +43,6 @@ func Router(w http.ResponseWriter, r *http.Request) {
 		handler = Post(routes.DelFav)
 	case Match(path, "/profile/get"):
 		handler = Post(routes.GetUserData)
-	case Match(path, "/profile"):
-		handler = Post(routes.EditProfile)
 	case Match(path, "/orderhistory"):
 		handler = Post(routes.OrdersHistory)
 	case Match(path, "/order"):
