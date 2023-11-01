@@ -7,11 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 )
-
-type Order struct {
-	Token string
-}
 
 type TheOrder struct {
 	Address  map[string]string
@@ -71,7 +68,7 @@ func MakeOrders(res http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(res).Encode(CheckErrorOrder)
 }
 
-func (o Order) OrdersHistory(res http.ResponseWriter, req *http.Request) {
+func OrdersHistory(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()
@@ -79,14 +76,53 @@ func (o Order) OrdersHistory(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
-	Orders := controller.GetOrders(db, o.Token)
-	var OrderRes = make(map[string]interface{})
+	body, err := io.ReadAll(req.Body)
 
-	if len(Orders) == 0 {
-		OrderRes["Error"] = false
-		OrderRes["Message"] = "لا توجد طلبات حتى الآن"
+	if err != nil {
+		panic(err.Error())
 	}
-	OrderRes = Orders
+
+	dataForm := make(map[string]string)
+	TheToken := json.Unmarshal(body, &dataForm)
+	if TheToken != nil {
+		panic(TheToken.Error())
+	}
+
+	token := dataForm["authToken"]
+
+	Orders := controller.GetOrders(db, token)
 
 	json.NewEncoder(res).Encode(Orders)
+}
+
+func CancelOrder(res http.ResponseWriter, req *http.Request) {
+	db := DB.Connect()
+
+	defer db.Close()
+	res.Header().Set("Access-Control-Allow-Origin", "*")
+	res.Header().Set("Content-Type", "application/json")
+	res.WriteHeader(http.StatusOK)
+	body, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	dataForm := make(map[string]string)
+	TheToken := json.Unmarshal(body, &dataForm)
+	if TheToken != nil {
+		panic(TheToken.Error())
+	}
+
+	order := dataForm["order"]
+	token := dataForm["token"]
+	confirmed := dataForm["confirmed"]
+	i, err := strconv.Atoi(confirmed)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	orderRes := controller.CancelOrder(db, token, order, i)
+
+	json.NewEncoder(res).Encode(orderRes)
 }

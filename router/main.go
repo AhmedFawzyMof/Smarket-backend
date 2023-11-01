@@ -18,7 +18,6 @@ const (
 func Router(w http.ResponseWriter, r *http.Request) {
 	var handler http.Handler
 	var slug string
-	var token string
 	var id int
 
 	path := r.URL.Path
@@ -36,20 +35,22 @@ func Router(w http.ResponseWriter, r *http.Request) {
 		handler = Post(routes.Register)
 	case Match(path, "/user/login"):
 		handler = Post(routes.Login)
-	case Match(path, "/fav"):
+	case Match(path, "/fav/add"):
 		handler = Post(routes.Fav)
-	case Match(path, "/fav/([^/]+)", &token):
-		handler = Get(routes.Favourite{Token: token}.GetFav)
+	case Match(path, "/fav"):
+		handler = Post(routes.GetFav)
 	case Match(path, "/Delfav"):
 		handler = Post(routes.DelFav)
-	case Match(path, "/profile/([^/]+)", &token):
-		handler = Get(routes.UserEmail{Token: token}.GetUserData)
+	case Match(path, "/profile/get"):
+		handler = Post(routes.GetUserData)
 	case Match(path, "/profile"):
 		handler = Post(routes.EditProfile)
-	case Match(path, "/orderhistory/([^/]+)", &token):
-		handler = Get(routes.Order{Token: token}.OrdersHistory)
+	case Match(path, "/orderhistory"):
+		handler = Post(routes.OrdersHistory)
 	case Match(path, "/order"):
 		handler = Post(routes.MakeOrders)
+	case Match(path, "/order/delete"):
+		handler = Post(routes.CancelOrder)
 	default:
 		http.NotFound(w, r)
 		return
@@ -67,7 +68,7 @@ func Match(path, pattern string, args ...interface{}) bool {
 	}
 
 	for i, match := range matches[1:] {
-		
+
 		switch path := args[i].(type) {
 		case *string:
 			*path = match
@@ -98,11 +99,13 @@ func Post(handler http.HandlerFunc) http.HandlerFunc {
 
 func allowMethod(handler http.HandlerFunc, method string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+
 		if method != r.Method {
 			w.Header().Set("Allow", method)
 			http.Error(w, "405 Method Not Allowed", http.StatusMethodNotAllowed)
 			return
 		}
+
 		handler(w, r)
 	}
 }

@@ -8,11 +8,7 @@ import (
 	"net/http"
 )
 
-type UserEmail struct {
-	Token string
-}
-
-func (u UserEmail) GetUserData(res http.ResponseWriter, req *http.Request) {
+func GetUserData(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()
@@ -20,7 +16,21 @@ func (u UserEmail) GetUserData(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
-	UserInfo := controller.GetUserInfo(db, u.Token)
+	body, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		panic(err)
+	}
+
+	dataForm := make(map[string]string)
+	mapData := json.Unmarshal(body, &dataForm)
+	if mapData != nil {
+		panic(mapData.Error())
+	}
+
+	token := dataForm["authToken"]
+
+	UserInfo := controller.GetUserInfo(db, token)
 
 	json.NewEncoder(res).Encode(UserInfo)
 }

@@ -4,13 +4,10 @@ import (
 	"Smarket/controller"
 	DB "Smarket/db"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
-
-type Favourite struct {
-	Token string
-}
 
 func Fav(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
@@ -38,7 +35,7 @@ func Fav(res http.ResponseWriter, req *http.Request) {
 
 }
 
-func (f Favourite) GetFav(res http.ResponseWriter, req *http.Request) {
+func GetFav(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()
@@ -46,7 +43,23 @@ func (f Favourite) GetFav(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
-	FavRes := controller.GetUserFav(db, f.Token)
+	body, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		panic(err)
+	}
+
+	dataForm := make(map[string]string)
+	mapData := json.Unmarshal(body, &dataForm)
+	if mapData != nil {
+		panic(mapData.Error())
+	}
+
+	fmt.Println(dataForm["authToken"])
+
+	token := dataForm["authToken"]
+
+	FavRes := controller.GetUserFav(db, token)
 
 	Res := map[string]interface{}{
 		"products": FavRes,

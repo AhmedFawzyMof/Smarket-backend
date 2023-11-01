@@ -16,6 +16,7 @@ type Order struct {
 	delivered int
 	paid      int
 	method    string
+	confirmed int
 }
 
 type orderProducts struct {
@@ -114,7 +115,7 @@ func GetOrders(db *sql.DB, token string) map[string]interface{} {
 		for Select.Next() {
 			var Order Order
 
-			if err := Select.Scan(&Order.id, &Order.date, &Order.user, &Order.delivered, &Order.paid, &Order.method); err != nil {
+			if err := Select.Scan(&Order.id, &Order.date, &Order.user, &Order.delivered, &Order.paid, &Order.method, &Order.confirmed); err != nil {
 				panic(err.Error())
 			}
 
@@ -125,6 +126,7 @@ func GetOrders(db *sql.DB, token string) map[string]interface{} {
 				"delivered": Order.delivered,
 				"paid":      Order.paid,
 				"method":    Order.method,
+				"confirmed": Order.confirmed,
 			}
 
 			Orders = append(Orders, TheOrder)
@@ -141,7 +143,7 @@ func GetOrders(db *sql.DB, token string) map[string]interface{} {
 			}
 		}
 
-		sql := fmt.Sprintf("SELECT OrderProducts.quantity, OrderProducts.order, Products.`name`, Products.image, Products.price  FROM OrderProducts INNER JOIN Products ON OrderProducts.product=Products.`id`  WHERE OrderProducts.`order` IN (%s)", ordersIds)
+		sql := fmt.Sprintf("SELECT OrderProducts.quantity, OrderProducts.`order`, Products.`name`, Products.image, Products.price  FROM OrderProducts INNER JOIN Products ON OrderProducts.product=Products.`id`  WHERE OrderProducts.`order` IN (%s)", ordersIds)
 		Products, err := db.Prepare(sql)
 
 		if err != nil {
@@ -155,22 +157,16 @@ func GetOrders(db *sql.DB, token string) map[string]interface{} {
 			OrderRes["Error"] = true
 			return OrderRes
 		}
-		fmt.Println(err)
 
 		defer rows.Close()
 
 		for rows.Next() {
-			fmt.Println(rows)
 
 			var product orderProducts
-
-			fmt.Println(Products)
 
 			if err := rows.Scan(&product.quantity, &product.order, &product.name, &product.image, &product.price); err != nil {
 				panic(err.Error())
 			}
-
-			fmt.Println(err, product.quantity, product.order, product.name, product.image, product.price)
 
 			TheOrderProduct := map[string]interface{}{
 				"order":    product.order,
@@ -187,4 +183,57 @@ func GetOrders(db *sql.DB, token string) map[string]interface{} {
 	OrderRes["Order"] = Orders
 	OrderRes["Products"] = orderProduct
 	return OrderRes
+}
+
+func CancelOrder(db *sql.DB, token, order string, confirmed int) map[string]bool {
+	var OrderRes = make(map[string]bool)
+
+	claims, err := verifyToken(token)
+	if err != nil {
+		OrderRes["Error"] = true
+		return OrderRes
+	}
+	var tm time.Time
+	switch iat := claims["exp"].(type) {
+	case float64:
+		tm = time.Unix(int64(iat), 0)
+	case json.Number:
+		v, _ := iat.Int64()
+		tm = time.Unix(v, 0)
+	}
+
+	if tm == time.Now() {
+		OrderRes["Error"] = true
+		return OrderRes
+	}
+
+	userEmail := claims["email"]
+
+	FindEmail := db.QueryRow("SELECT id FROM Users WHERE email = ?", userEmail)
+
+	var User user
+
+	Err := FindEmail.Scan(&User.id)
+
+	if Err == nil {
+		if confirmed == 0 {
+			_, err := db.Exec("DELETE FROM Orders WHERE (id, user, confirmed)=(?, ?, ?)", order, User.id, 0)
+
+			if err != nil {
+				panic(err.Error())
+			}
+
+			return map[string]bool{
+				"Error": false,
+			}
+		}
+
+		return map[string]bool{
+			"Error": true,
+		}
+	}
+
+	return map[string]bool{
+		"Error": true,
+	}
 }
