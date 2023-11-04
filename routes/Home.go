@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"Smarket/cache"
 	controller "Smarket/controller"
 	DB "Smarket/db"
 	"encoding/json"
@@ -19,35 +20,42 @@ func Home(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
-	Categories := make(chan []controller.Categories, 1)
-	Products := make(chan []controller.Products, 1)
-	Offers := make(chan []controller.Offers, 1)
-	wg := &sync.WaitGroup{}
+	Home, err := cache.CacheGet("Home")
 
-	wg.Add(3)
+	if err != nil {
 
-	go controller.ProductGetAll(db, Products, wg)
-	go controller.CategoryGetAll(db, Categories, wg)
-	go controller.OfferGetAll(db, Offers, wg)
+		Categories := make(chan []controller.Categories, 1)
+		Products := make(chan []controller.Products, 1)
+		Offers := make(chan []controller.Offers, 1)
+		wg := &sync.WaitGroup{}
 
-	wg.Wait()
-	close(Products)
-	close(Categories)
-	close(Offers)
+		wg.Add(3)
 
-	Product, Category, Offer := <-Products, <-Categories, <-Offers
+		go controller.ProductGetAll(db, Products, wg)
+		go controller.CategoryGetAll(db, Categories, wg)
+		go controller.OfferGetAll(db, Offers, wg)
 
-	var data = map[string]interface{}{
-		"Products":   Product,
-		"Categories": Category,
-		"Offers":     Offer,
+		wg.Wait()
+		close(Products)
+		close(Categories)
+		close(Offers)
+
+		Product, Category, Offer := <-Products, <-Categories, <-Offers
+
+		var data = map[string]interface{}{
+			"Products":   Product,
+			"Categories": Category,
+			"Offers":     Offer,
+		}
+
+		cache.CacheSet("Home", data, time.Now())
+
+		json.NewEncoder(res).Encode(data)
+		excuteTime := time.Since(start)
+		fmt.Println(excuteTime)
 	}
 
-	ip := req.RemoteAddr
-
-	fmt.Println(ip)
-
-	json.NewEncoder(res).Encode(data)
+	json.NewEncoder(res).Encode(Home)
 	excuteTime := time.Since(start)
 	fmt.Println(excuteTime)
 }
