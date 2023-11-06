@@ -51,6 +51,8 @@ func Router(w http.ResponseWriter, r *http.Request) {
 		handler = Post(routes.CancelOrder)
 	case Match(path, "/offers"):
 		handler = Get(routes.GetProductsOffers)
+	case Match(path, "/foryou"):
+		handler = Post(routes.ForYou)
 	default:
 		http.NotFound(w, r)
 		return

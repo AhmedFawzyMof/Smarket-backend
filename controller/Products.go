@@ -18,6 +18,7 @@ type product struct {
 	available     int
 	offer         int
 	inStock       int
+	pricePerUint  float32
 }
 
 type Products map[string]interface{}
@@ -36,7 +37,7 @@ func ProductGetAll(db *sql.DB, responseChan chan []Products, wg *sync.WaitGroup)
 	for Select.Next() {
 		var Product product
 
-		if err := Select.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock); err != nil {
+		if err := Select.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock, &Product.pricePerUint); err != nil {
 			panic(err.Error())
 		}
 		TheProduct := map[string]interface{}{
@@ -52,6 +53,7 @@ func ProductGetAll(db *sql.DB, responseChan chan []Products, wg *sync.WaitGroup)
 			"available":     Product.available,
 			"offer":         Product.offer,
 			"inStock":       Product.inStock,
+			"pricePerUint":  Product.pricePerUint,
 		}
 
 		Products = append(Products, TheProduct)
@@ -68,7 +70,7 @@ func ProductGetId(db *sql.DB, ID int) Products {
 
 	var Product product
 
-	if err := Select.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock); err != nil {
+	if err := Select.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock, &Product.pricePerUint); err != nil {
 		return map[string]interface{}{}
 	}
 
@@ -84,7 +86,8 @@ func ProductGetId(db *sql.DB, ID int) Products {
 		"unit":          Product.unit,
 		"available":     Product.available,
 		"offer":         Product.offer,
-		"inStock":       Product.inStock,
+		"inStock":       Product.inStock,			
+		"pricePerUint":  Product.pricePerUint,
 	}
 	return TheProduct
 
@@ -103,7 +106,7 @@ func ProductOffers(db *sql.DB, resChan chan []Products, wg *sync.WaitGroup) {
 	for Select.Next() {
 		var Product product
 
-		if err := Select.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock); err != nil {
+	if err := Select.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock, &Product.pricePerUint); err != nil {
 			productRes := make(map[string]interface{})
 			productRes["Error"] = true
 
@@ -125,7 +128,7 @@ func ProductOffers(db *sql.DB, resChan chan []Products, wg *sync.WaitGroup) {
 			"unit":          Product.unit,
 			"available":     Product.available,
 			"offer":         Product.offer,
-			"inStock":       Product.inStock,
+		"pricePerUint":  Product.pricePerUint,
 		}
 		products = append(products, TheProduct)
 

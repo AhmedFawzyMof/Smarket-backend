@@ -1,12 +1,14 @@
 package routes
 
 import (
+	"Smarket/cache"
 	"Smarket/controller"
 	DB "Smarket/db"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 )
 
 type ProductId struct {
@@ -40,14 +42,25 @@ func GetProductsOffers(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
-	productChan := make(chan []controller.Products, 1)
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go controller.ProductOffers(db, productChan, wg)
-	wg.Wait()
-	close(productChan)
+	Offers, err := cache.CacheGet("Offers")
 
-	products := <-productChan
+	if err != nil {
 
-	json.NewEncoder(res).Encode(products)
+		productChan := make(chan []controller.Products, 1)
+		wg := &sync.WaitGroup{}
+		wg.Add(1)
+		go controller.ProductOffers(db, productChan, wg)
+		wg.Wait()
+		close(productChan)
+
+		products := <-productChan
+
+		Products := make(map[string]interface{})
+		Products["products"] = products
+
+		cache.CacheSet("Offers", Products, time.Now())
+		json.NewEncoder(res).Encode(Products)
+	} else {
+		json.NewEncoder(res).Encode(Offers)
+	}
 }

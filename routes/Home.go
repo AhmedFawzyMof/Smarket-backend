@@ -53,9 +53,9 @@ func Home(res http.ResponseWriter, req *http.Request) {
 		json.NewEncoder(res).Encode(data)
 		excuteTime := time.Since(start)
 		fmt.Println(excuteTime)
+	} else {
+		json.NewEncoder(res).Encode(Home)
+		excuteTime := time.Since(start)
+		fmt.Println(excuteTime)
 	}
-
-	json.NewEncoder(res).Encode(Home)
-	excuteTime := time.Since(start)
-	fmt.Println(excuteTime)
 }

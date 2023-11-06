@@ -9,10 +9,11 @@ import (
 	"time"
 )
 
-
 var mutex sync.Mutex
 
 func CacheSet(key string, value map[string]interface{}, ttl time.Time) error {
+	mutex.Lock()
+	defer mutex.Unlock()
 	theFile := fmt.Sprintf("./cache/%s.json", key)
 	CacheFile, err := os.Create(theFile)
 
@@ -37,6 +38,8 @@ func CacheSet(key string, value map[string]interface{}, ttl time.Time) error {
 }
 
 func CacheGet(key string) (map[string]interface{}, error) {
+	mutex.Lock()
+	defer mutex.Unlock()
 	file := fmt.Sprintf("./cache/%s.json", key)
 
 	jsonFile, err := os.Open(file)
