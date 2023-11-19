@@ -225,12 +225,12 @@ func CancelOrder(db *sql.DB, token, order string, confirmed int) map[string]bool
 			}
 
 			return map[string]bool{
-				"Error": false,
+				"Error": true,
 			}
 		}
 
 		return map[string]bool{
-			"Error": true,
+			"Error": false,
 		}
 	}
 
