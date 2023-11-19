@@ -7,7 +7,7 @@ import (
 
 type category struct {
 	name  string
-	image string
+	image []byte
 }
 
 type Categories map[string]interface{}
@@ -56,9 +56,10 @@ func CategoriesGetAllProducts(db *sql.DB, responseChan chan []Categories, wg *sy
 	for Select.Next() {
 		var Product product
 
-		if err := Select.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock); err != nil {
+		if err := Select.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock, &Product.pricePerUint, &Product.unitNumber); err != nil {
 			panic(err.Error())
 		}
+
 		TheProduct := map[string]interface{}{
 			"id":            Product.id,
 			"name":          Product.name,
@@ -72,6 +73,8 @@ func CategoriesGetAllProducts(db *sql.DB, responseChan chan []Categories, wg *sy
 			"available":     Product.available,
 			"offer":         Product.offer,
 			"inStock":       Product.inStock,
+			"pricePerUint":  Product.pricePerUint,
+			"unitNumber":    Product.unitNumber,
 		}
 
 		Products = append(Products, TheProduct)
@@ -79,5 +82,35 @@ func CategoriesGetAllProducts(db *sql.DB, responseChan chan []Categories, wg *sy
 	}
 
 	responseChan <- Products
+	wg.Done()
+}
+
+func GetAllCategories(db *sql.DB, responseChan chan []Categories, wg *sync.WaitGroup) {
+	var Categories []Categories
+
+	Select, err := db.Query("SELECT * FROM `Categories`")
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	defer Select.Close()
+
+	for Select.Next() {
+		var category category
+
+		if err := Select.Scan(&category.name, &category.image); err != nil {
+			panic(err.Error())
+		}
+
+		theCategory := map[string]interface{}{
+			"name":  category.name,
+			"image": category.image,
+		}
+
+		Categories = append(Categories, theCategory)
+	}
+
+	responseChan <- Categories
 	wg.Done()
 }

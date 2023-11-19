@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -22,7 +23,7 @@ type Order struct {
 type orderProducts struct {
 	order    string
 	name     string
-	image    string
+	image    []byte
 	price    int
 	quantity int
 }
@@ -236,4 +237,131 @@ func CancelOrder(db *sql.DB, token, order string, confirmed int) map[string]bool
 	return map[string]bool{
 		"Error": true,
 	}
+}
+
+func GetAllOrders(db *sql.DB, orderChan chan Orders, wg *sync.WaitGroup) {
+	var Orders []Orders
+	var orderProduct []OrdersProducts
+
+	Select, err := db.Query("SELECT * FROM `Orders`")
+
+	if err != nil {
+		fmt.Println(err)
+		Error := map[string]interface{}{
+			"Error": true,
+		}
+		orderChan <- Error
+		wg.Done()
+	}
+
+	defer Select.Close()
+
+	for Select.Next() {
+		var Order Order
+
+		if err := Select.Scan(&Order.id, &Order.date, &Order.user, &Order.delivered, &Order.paid, &Order.method, &Order.confirmed); err != nil {
+			fmt.Println(err)
+			Error := map[string]interface{}{
+				"Error": true,
+			}
+			orderChan <- Error
+			wg.Done()
+		}
+
+		TheOrder := map[string]interface{}{
+			"id":        Order.id,
+			"date":      Order.date,
+			"user":      Order.user,
+			"delivered": Order.delivered,
+			"paid":      Order.paid,
+			"method":    Order.method,
+			"confirmed": Order.confirmed,
+		}
+
+		Orders = append(Orders, TheOrder)
+	}
+
+	ordersIds := ""
+
+	for i, order := range Orders {
+		if i == 0 {
+			ordersIds += fmt.Sprintf("'%v'", order["id"])
+		}
+		if i > 0 {
+			ordersIds += fmt.Sprintf(",'%v'", order["id"])
+		}
+	}
+
+	sql := fmt.Sprintf("SELECT OrderProducts.quantity, OrderProducts.`order`, Products.`name`, Products.image, Products.price  FROM OrderProducts INNER JOIN Products ON OrderProducts.product=Products.`id`  WHERE OrderProducts.`order` IN (%s)", ordersIds)
+	Products, err := db.Prepare(sql)
+
+	if err != nil {
+		fmt.Println(err)
+		Error := map[string]interface{}{
+			"Error": true,
+		}
+		orderChan <- Error
+		wg.Done()
+	}
+
+	rows, err := Products.Query()
+
+	if err != nil {
+		fmt.Println(err)
+		Error := map[string]interface{}{
+			"Error": true,
+		}
+		orderChan <- Error
+		wg.Done()
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+
+		var product orderProducts
+
+		if err := rows.Scan(&product.quantity, &product.order, &product.name, &product.image, &product.price); err != nil {
+			panic(err.Error())
+		}
+
+		TheOrderProduct := map[string]interface{}{
+			"order":    product.order,
+			"name":     product.name,
+			"image":    product.image,
+			"price":    product.price,
+			"quantity": product.quantity,
+		}
+
+		orderProduct = append(orderProduct, TheOrderProduct)
+	}
+
+	for _, o := range Orders {
+		type Tproducts map[string]interface{}
+		var p []Tproducts
+		for _, op := range orderProduct {
+
+			if op["order"] == o["id"] {
+				product := map[string]interface{}{
+					"order":    op["order"],
+					"name":     op["name"],
+					"image":    op["image"],
+					"price":    op["price"],
+					"quantity": op["quantity"],
+				}
+				p = append(p, product)
+			}
+
+		}
+
+		o["products"] = p
+
+	}
+
+	OrdersRes := map[string]interface{}{
+		"Orders": Orders,
+	}
+
+	orderChan <- OrdersRes
+	wg.Done()
 }

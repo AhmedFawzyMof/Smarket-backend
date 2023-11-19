@@ -1,6 +1,7 @@
 package router
 
 import (
+	admin "Smarket/Admin"
 	"Smarket/routes"
 	"net/http"
 	"regexp"
@@ -19,6 +20,7 @@ func Router(w http.ResponseWriter, r *http.Request) {
 	var handler http.Handler
 	var slug string
 	var id int
+	var table string
 
 	path := r.URL.Path
 
@@ -31,6 +33,8 @@ func Router(w http.ResponseWriter, r *http.Request) {
 		handler = Get(routes.CompanySlug{Slug: slug}.GetBySlug)
 	case Match(path, "/category/([^/]+)", &slug):
 		handler = Get(routes.CategorySlug{Slug: slug}.GetBySlug)
+	case Match(path, "/subcategory/([^/]+)", &slug):
+		handler = Get(routes.SubCategorySlug{Slug: slug}.GetBySlug)
 	case Match(path, "/user/register"):
 		handler = Post(routes.Register)
 	case Match(path, "/user/login"):
@@ -53,6 +57,26 @@ func Router(w http.ResponseWriter, r *http.Request) {
 		handler = Get(routes.GetProductsOffers)
 	case Match(path, "/foryou"):
 		handler = Post(routes.ForYou)
+	case Match(path, "/admin/products"):
+		handler = Get(admin.GetProducts)
+	case Match(path, "/admin/orders"):
+		handler = Get(admin.GetOrders)
+	case Match(path, "/admin/companies"):
+		handler = Get(admin.GetComponies)
+	case Match(path, "/admin/categories"):
+		handler = Get(admin.GetCategories)
+	case Match(path, "/admin/offers"):
+		handler = Get(admin.GetOffers)
+	case Match(path, "/admin/users"):
+		handler = Get(admin.GetUsers)
+	case Match(path, "/admin/subcategory"):
+		handler = Get(admin.GetSubCategories)
+	case Match(path, "/admin/([^/]+)/edit", &table):
+		handler = Post(admin.Table{Name: table}.EditTable)
+	case Match(path, "/admin/([^/]+)/delete", &table):
+		handler = Post(admin.Table{Name: table}.DeleteTable)
+	case Match(path, "/admin/([^/]+)/add", &table):
+		handler = Post(admin.Table{Name: table}.CreateTable)
 	default:
 		http.NotFound(w, r)
 		return

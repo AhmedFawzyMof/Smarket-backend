@@ -5,14 +5,12 @@ import (
 	controller "Smarket/controller"
 	DB "Smarket/db"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"sync"
 	"time"
 )
 
 func Home(res http.ResponseWriter, req *http.Request) {
-	start := time.Now()
 	db := DB.Connect()
 
 	defer db.Close()
@@ -51,11 +49,7 @@ func Home(res http.ResponseWriter, req *http.Request) {
 		cache.CacheSet("Home", data, time.Now())
 
 		json.NewEncoder(res).Encode(data)
-		excuteTime := time.Since(start)
-		fmt.Println(excuteTime)
 	} else {
 		json.NewEncoder(res).Encode(Home)
-		excuteTime := time.Since(start)
-		fmt.Println(excuteTime)
 	}
 }

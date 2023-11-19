@@ -2,7 +2,6 @@ package DB
 
 import (
 	"database/sql"
-	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -32,10 +31,6 @@ func Connect() *sql.DB {
 	if Err != nil {
 		panic(Err.Error())
 	}
-
-	stats := db.Stats()
-
-	fmt.Println("Open connections:", stats.OpenConnections)
 
 	return db
 

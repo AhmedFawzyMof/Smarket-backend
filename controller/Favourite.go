@@ -157,7 +157,7 @@ func GetUserFav(db *sql.DB, token string) []favProducts {
 			for products.Next() {
 				var Product product
 
-				if err := products.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock); err != nil {
+				if err := products.Scan(&Product.id, &Product.name, &Product.description, &Product.price, &Product.company, &Product.subcategories, &Product.category, &Product.image, &Product.unit, &Product.available, &Product.offer, &Product.inStock, &Product.pricePerUint, &Product.unitNumber); err != nil {
 					panic(err.Error())
 				}
 
@@ -174,6 +174,8 @@ func GetUserFav(db *sql.DB, token string) []favProducts {
 					"available":     Product.available,
 					"offer":         Product.offer,
 					"inStock":       Product.inStock,
+					"pricePerUint":  Product.pricePerUint,
+					"unitNumber":    Product.unitNumber,
 				}
 
 				FavProducts = append(FavProducts, TheProduct)

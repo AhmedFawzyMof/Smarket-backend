@@ -120,8 +120,10 @@ func ForYou(res http.ResponseWriter, req *http.Request) {
 
 	close(productChan)
 
+	pr := <- productChan
+
 	products := map[string]interface{}{
-		"Products": <-productChan,
+		"Products": pr,
 	}
 
 	json.NewEncoder(res).Encode(products)

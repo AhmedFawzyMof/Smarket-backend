@@ -21,18 +21,22 @@ func (c CategorySlug) GetBySlug(res http.ResponseWriter, req *http.Request) {
 	res.WriteHeader(http.StatusOK)
 
 	Category := make(chan []controller.Categories, 1)
+	SubCategories := make(chan []controller.SubCategories, 1)
 	wg := &sync.WaitGroup{}
 
-	wg.Add(1)
+	wg.Add(2)
 	go controller.CategoriesGetAllProducts(db, Category, wg, c.Slug)
-
+	go controller.CategoriesGetAllSubs(db, SubCategories, wg, c.Slug)
 	wg.Wait()
 	close(Category)
+	close(SubCategories)
 
 	products := <-Category
+	subcategories := <-SubCategories
 
 	var data = map[string]interface{}{
-		"Products": products,
+		"Products":      products,
+		"SubCategories": subcategories,
 	}
 
 	json.NewEncoder(res).Encode(data)

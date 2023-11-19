@@ -4,7 +4,6 @@ import (
 	"Smarket/controller"
 	DB "Smarket/db"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -55,7 +54,6 @@ func GetFav(res http.ResponseWriter, req *http.Request) {
 		panic(mapData.Error())
 	}
 
-	fmt.Println(dataForm["authToken"])
 
 	token := dataForm["authToken"]
 
