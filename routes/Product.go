@@ -1,11 +1,10 @@
 package routes
 
 import (
-	"Smarket/cache"
-	"Smarket/controller"
-	DB "Smarket/db"
+	"alwadi/cache"
+	"alwadi/controller"
+	DB "alwadi/db"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"sync"
 	"time"
@@ -25,7 +24,6 @@ func (p ProductId) GetById(res http.ResponseWriter, req *http.Request) {
 
 	Product := controller.ProductGetId(db, p.Id)
 
-	fmt.Println(Product, p.Id)
 
 	var data = map[string]interface{}{
 		"product": Product,

@@ -1,9 +1,10 @@
 package routes
 
 import (
-	"Smarket/controller"
-	DB "Smarket/db"
+	"alwadi/controller"
+	DB "alwadi/db"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -48,20 +49,19 @@ func GetFav(res http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	dataForm := make(map[string]string)
+	dataForm := make(map[string]interface{})
 	mapData := json.Unmarshal(body, &dataForm)
 	if mapData != nil {
 		panic(mapData.Error())
 	}
-
-
-	token := dataForm["authToken"]
-
+	var token string = fmt.Sprintf("%v", dataForm["authToken"])
 	FavRes := controller.GetUserFav(db, token)
 
 	Res := map[string]interface{}{
 		"products": FavRes,
 	}
+	
+	fmt.Println(dataForm)
 
 	json.NewEncoder(res).Encode(Res)
 }

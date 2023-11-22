@@ -1,8 +1,8 @@
 package admin
 
 import (
-	"Smarket/controller"
-	DB "Smarket/db"
+	"alwadi/controller"
+	DB "alwadi/db"
 	"encoding/json"
 	"io"
 	"net/http"

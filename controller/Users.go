@@ -56,14 +56,14 @@ func generateJWT(email string, key []byte) (string, error) {
 	return tokenString, nil
 }
 
-func AddUser(db *sql.DB, userData map[string]interface{}) map[string]interface{} {
-	var username string = fmt.Sprintf("%v", userData["username"])
-	var email string = fmt.Sprintf("%v", userData["email"])
-	var password string = fmt.Sprintf("%v", userData["password"])
-	var password2 string = fmt.Sprintf("%v", userData["password2"])
-	var phone string = fmt.Sprintf("%v", userData["phone"])
-	var spare_phone string = fmt.Sprintf("%v", userData["spare_phone"])
-	var terms string = fmt.Sprintf("%v", userData["terms"])
+func AddUser(db *sql.DB, userData map[string]string) map[string]interface{} {
+	var username string =  userData["username"]
+	var email string =  userData["email"]
+	var password string =  userData["password"]
+	var password2 string =  userData["password2"]
+	var phone string =  userData["phone"]
+	var spare_phone string =  userData["spare_phone"]
+	var terms string =  userData["terms"]
 	id := uuid.New()
 	if password != password2 {
 		ErrorRes := map[string]interface{}{
@@ -113,9 +113,9 @@ func AddUser(db *sql.DB, userData map[string]interface{}) map[string]interface{}
 	return userRes
 }
 
-func GetUser(db *sql.DB, userData map[string]interface{}) map[string]interface{} {
-	var email string = fmt.Sprintf("%v", userData["email"])
-	var password string = fmt.Sprintf("%v", userData["password"])
+func GetUser(db *sql.DB, userData map[string]string) map[string]interface{} {
+	var email string = userData["email"]
+	var password string = userData["password"]
 	sha := sha256.New()
 	sha.Write([]byte(password))
 	pass := sha.Sum(nil)

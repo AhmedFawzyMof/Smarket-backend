@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"Smarket/controller"
-	DB "Smarket/db"
+	"alwadi/controller"
+	DB "alwadi/db"
 	"encoding/json"
 	"net/http"
 	"sync"

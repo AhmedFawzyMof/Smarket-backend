@@ -1,14 +1,15 @@
 package routes
 
 import (
-	"Smarket/cache"
-	controller "Smarket/controller"
-	DB "Smarket/db"
+	"alwadi/cache"
+	controller "alwadi/controller"
+	DB "alwadi/db"
 	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
 )
+
 
 func Home(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()

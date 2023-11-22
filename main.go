@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Smarket/router"
+	"alwadi/router"
 	"log"
 	"net/http"
 )

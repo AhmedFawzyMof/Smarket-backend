@@ -1,8 +1,8 @@
 package router
 
 import (
-	admin "Smarket/Admin"
-	"Smarket/routes"
+	admin "alwadi/Admin"
+	"alwadi/routes"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -88,7 +88,6 @@ func Router(w http.ResponseWriter, r *http.Request) {
 func Match(path, pattern string, args ...interface{}) bool {
 	regex := mustCompileCached(pattern)
 	matches := regex.FindStringSubmatch(path)
-
 	if len(matches) <= 0 {
 		return false
 	}
@@ -125,7 +124,6 @@ func Post(handler http.HandlerFunc) http.HandlerFunc {
 
 func allowMethod(handler http.HandlerFunc, method string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		if method != r.Method {
 			w.Header().Set("Allow", method)
 			http.Error(w, "405 Method Not Allowed", http.StatusMethodNotAllowed)

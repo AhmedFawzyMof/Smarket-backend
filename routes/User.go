@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"Smarket/controller"
-	DB "Smarket/db"
+	"alwadi/controller"
+	DB "alwadi/db"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -52,7 +52,7 @@ func Register(res http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	dataForm := make(map[string]interface{})
+	dataForm := make(map[string]string)
 	mapData := json.Unmarshal(body, &dataForm)
 	if mapData != nil {
 		panic(mapData.Error())
@@ -77,7 +77,7 @@ func Login(res http.ResponseWriter, req *http.Request) {
 		panic(err)
 	}
 
-	dataForm := make(map[string]interface{})
+	dataForm := make(map[string]string)
 	mapData := json.Unmarshal(body, &dataForm)
 	if mapData != nil {
 		panic(mapData.Error())
@@ -127,5 +127,4 @@ func ForYou(res http.ResponseWriter, req *http.Request) {
 	}
 
 	json.NewEncoder(res).Encode(products)
-
 }

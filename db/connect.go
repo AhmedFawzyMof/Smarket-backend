@@ -26,7 +26,7 @@ func Connect() *sql.DB {
 
 	// connectString := fmt.Sprintf("%v", config["databaseString"])
 
-	db, Err := sql.Open("sqlite3", "smarket.db")
+	db, Err := sql.Open("sqlite3", "alwadi.db")
 
 	if Err != nil {
 		panic(Err.Error())
