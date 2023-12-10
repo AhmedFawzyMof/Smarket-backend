@@ -1,92 +1,191 @@
 package routes
 
 import (
-	"alwadi/controller"
-	DB "alwadi/db"
+	DB "alwadi_markets/db"
+	"alwadi_markets/middleware"
+	"alwadi_markets/tables"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 )
 
-func Fav(res http.ResponseWriter, req *http.Request) {
-	db := DB.Connect()
+func AddFavourite(res http.ResponseWriter, req *http.Request, params map[string]string) {
+	if req.Method == "POST" {
+		db := DB.Connect()
+		res.WriteHeader(http.StatusOK)
 
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
+		defer db.Close()
 
-	body, err := io.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 
-	if err != nil {
-		panic(err)
+		if err != nil {
+			panic(err.Error())
+		}
+		var favMap map[string]interface{}
+
+		var Favourite tables.Favourite
+
+		Error := json.Unmarshal(body, &favMap)
+
+		if Error != nil {
+			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		}
+
+		var token string = fmt.Sprintf("%s", favMap["token"])
+
+		id, e := middleware.VerifyToken(token)
+		if e != nil {
+			http.Error(res, e.Error(), http.StatusInternalServerError)
+		}
+
+		var productfloat64 float64 = favMap["product"].(float64)
+
+		var product int = int(productfloat64)
+
+		Favourite.Product = product
+		Favourite.User = id
+
+		FavChan := make(chan []byte, 1)
+
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go tables.Favourite.Add(Favourite, db, FavChan, wg)
+		wg.Wait()
+
+		close(FavChan)
+
+		var FavResponse map[string]interface{}
+
+		errors := json.Unmarshal(<-FavChan, &FavResponse)
+
+		if errors != nil {
+			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		}
+
+		if err := json.NewEncoder(res).Encode(FavResponse); err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
 	}
-
-	dataForm := make(map[string]interface{})
-	mapData := json.Unmarshal(body, &dataForm)
-	if mapData != nil {
-		panic(mapData.Error())
-	}
-
-	FavRes := controller.AddToFav(db, dataForm)
-
-	json.NewEncoder(res).Encode(FavRes)
-
 }
 
-func GetFav(res http.ResponseWriter, req *http.Request) {
-	db := DB.Connect()
+func GetFavourite(res http.ResponseWriter, req *http.Request, params map[string]string) {
+	if req.Method == "POST" {
+		db := DB.Connect()
+		res.WriteHeader(http.StatusOK)
 
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
+		defer db.Close()
 
-	body, err := io.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 
-	if err != nil {
-		panic(err)
+		if err != nil {
+			panic(err.Error())
+		}
+		var favMap map[string]interface{}
+
+		var Favourite tables.Favourite
+
+		Error := json.Unmarshal(body, &favMap)
+
+		if Error != nil {
+			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		}
+
+		var token string = fmt.Sprintf("%s", favMap["token"])
+
+		id, e := middleware.VerifyToken(token)
+		if e != nil {
+			http.Error(res, e.Error(), http.StatusInternalServerError)
+		}
+
+		Favourite.User = id
+
+		FavChan := make(chan []byte, 1)
+
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go tables.Favourite.Get(Favourite, db, FavChan, wg)
+		wg.Wait()
+
+		close(FavChan)
+
+		var FavProducts []tables.Product
+
+		errors := json.Unmarshal(<-FavChan, &FavProducts)
+
+		if errors != nil {
+			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		}
+
+		Response := make(map[string]interface{}, 1)
+
+		Response["Products"] = FavProducts
+
+		if err := json.NewEncoder(res).Encode(Response); err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
 	}
-
-	dataForm := make(map[string]interface{})
-	mapData := json.Unmarshal(body, &dataForm)
-	if mapData != nil {
-		panic(mapData.Error())
-	}
-	var token string = fmt.Sprintf("%v", dataForm["authToken"])
-	FavRes := controller.GetUserFav(db, token)
-
-	Res := map[string]interface{}{
-		"products": FavRes,
-	}
-	
-	fmt.Println(dataForm)
-
-	json.NewEncoder(res).Encode(Res)
 }
 
-func DelFav(res http.ResponseWriter, req *http.Request) {
-	db := DB.Connect()
+func DeleteFavourite(res http.ResponseWriter, req *http.Request, params map[string]string) {
+	if req.Method == "DELETE" {
+		db := DB.Connect()
+		res.WriteHeader(http.StatusOK)
 
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
+		defer db.Close()
 
-	body, err := io.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 
-	if err != nil {
-		panic(err)
+		if err != nil {
+			panic(err.Error())
+		}
+		var favMap map[string]interface{}
+
+		var Favourite tables.Favourite
+
+		Error := json.Unmarshal(body, &favMap)
+
+		if Error != nil {
+			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		}
+
+		var token string = fmt.Sprintf("%s", favMap["token"])
+
+		id, e := middleware.VerifyToken(token)
+		if e != nil {
+			http.Error(res, e.Error(), http.StatusInternalServerError)
+		}
+
+		var productfloat64 float64 = favMap["product"].(float64)
+
+		var product int = int(productfloat64)
+
+		Favourite.Product = product
+		Favourite.User = id
+
+		FavChan := make(chan []byte, 1)
+
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go tables.Favourite.Delete(Favourite, db, FavChan, wg)
+		wg.Wait()
+
+		close(FavChan)
+
+		var FavResponse map[string]interface{}
+
+		errors := json.Unmarshal(<-FavChan, &FavResponse)
+
+		if errors != nil {
+			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		}
+
+		if err := json.NewEncoder(res).Encode(FavResponse); err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
 	}
-
-	dataForm := make(map[string]interface{})
-	mapData := json.Unmarshal(body, &dataForm)
-	if mapData != nil {
-		panic(mapData.Error())
-	}
-
-	FavRes := controller.DelUserFav(db, dataForm)
-
-	json.NewEncoder(res).Encode(FavRes)
 }

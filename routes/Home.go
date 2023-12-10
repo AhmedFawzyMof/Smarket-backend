@@ -1,56 +1,64 @@
 package routes
 
 import (
-	"alwadi/cache"
-	controller "alwadi/controller"
-	DB "alwadi/db"
+	DB "alwadi_markets/db"
+	"alwadi_markets/tables"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
-	"time"
 )
 
-
-func Home(res http.ResponseWriter, req *http.Request) {
+func Home(res http.ResponseWriter, req *http.Request, params map[string]string) {
+		res.WriteHeader(http.StatusOK)
 	db := DB.Connect()
-
 	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
 
-	Home, err := cache.CacheGet("Home")
+	Categories := make(chan []byte, 1)
+	Products := make(chan []byte, 1)
+	Offers := make(chan []byte, 1)
+
+	wg := &sync.WaitGroup{}
+
+	wg.Add(3)
+
+	go tables.Category.Get(tables.Category{}, db, Categories, wg)
+	go tables.Product.Get(tables.Product{}, db, Products, wg)
+	go tables.Offer.Get(tables.Offer{}, db, Offers, wg)
+
+	wg.Wait()
+	close(Products)
+	close(Categories)
+	close(Offers)
+
+	var category []tables.Category
+
+	err := json.Unmarshal(<-Categories, &category)
 
 	if err != nil {
-
-		Categories := make(chan []controller.Categories, 1)
-		Products := make(chan []controller.Products, 1)
-		Offers := make(chan []controller.Offers, 1)
-		wg := &sync.WaitGroup{}
-
-		wg.Add(3)
-
-		go controller.ProductGetAll(db, Products, wg)
-		go controller.CategoryGetAll(db, Categories, wg)
-		go controller.OfferGetAll(db, Offers, wg)
-
-		wg.Wait()
-		close(Products)
-		close(Categories)
-		close(Offers)
-
-		Product, Category, Offer := <-Products, <-Categories, <-Offers
-
-		var data = map[string]interface{}{
-			"Products":   Product,
-			"Categories": Category,
-			"Offers":     Offer,
-		}
-
-		cache.CacheSet("Home", data, time.Now())
-
-		json.NewEncoder(res).Encode(data)
-	} else {
-		json.NewEncoder(res).Encode(Home)
+		fmt.Println(err.Error())
 	}
+
+	var product []tables.Product
+
+	Err := json.Unmarshal(<-Products, &product)
+
+	if Err != nil {
+		http.Error(res, Err.Error(), http.StatusInternalServerError)
+	}
+
+	var offer []tables.Offer
+
+	ERR := json.Unmarshal(<-Offers, &offer)
+
+	if ERR != nil {
+		fmt.Println(ERR.Error())
+	}
+
+	Respones := make(map[string]interface{}, 3)
+	Respones["Products"] = product
+	Respones["Categories"] = category
+	Respones["Offers"] = offer
+
+	json.NewEncoder(res).Encode(Respones)
 }

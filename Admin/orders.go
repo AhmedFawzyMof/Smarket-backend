@@ -1,33 +1,41 @@
 package admin
 
 import (
-	"alwadi/controller"
-	DB "alwadi/db"
+	DB "alwadi_markets/db"
+	"alwadi_markets/tables"
 	"encoding/json"
 	"net/http"
 	"sync"
 )
 
-func GetOrders(res http.ResponseWriter, req *http.Request) {
-	db := DB.Connect()
-
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
+func GetOrders(res http.ResponseWriter, req *http.Request, params map[string]string) {
 	res.WriteHeader(http.StatusOK)
+	db := DB.Connect()
+	defer db.Close()
 
-	orders := make(chan controller.Orders, 1)
+	var Order tables.Orders
+
+	orderChan := make(chan []byte, 1)
+
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
-
-	go controller.GetAllOrders(db, orders, wg)
-
+	go tables.Orders.GetAll(Order, db, orderChan, wg)
 	wg.Wait()
 
-	close(orders)
+	close(orderChan)
 
-	var Orders = <-orders
+	var OrderResponse []tables.Orders
 
-	json.NewEncoder(res).Encode(Orders)
+	Response := make(map[string]interface{})
+
+	errors := json.Unmarshal(<-orderChan, &OrderResponse)
+
+	if errors != nil {
+		http.Error(res, errors.Error(), http.StatusInternalServerError)
+	}
+
+	if err := json.NewEncoder(res).Encode(Response); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
 }

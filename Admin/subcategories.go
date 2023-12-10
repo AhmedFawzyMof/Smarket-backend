@@ -1,35 +1,191 @@
 package admin
 
 import (
-	"alwadi/controller"
-	DB "alwadi/db"
+	DB "alwadi_markets/db"
+	"alwadi_markets/tables"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"sync"
 )
 
-func GetSubCategories(res http.ResponseWriter, req *http.Request) {
+func GetSubCategories(res http.ResponseWriter, req *http.Request, params map[string]string) {
 	db := DB.Connect()
-
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
 
-	products := make(chan []controller.SubCategories, 1)
+	defer db.Close()
+
+	SubCategories := make(chan []byte, 1)
+
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
 
-	go controller.GetAllSubs(db, products, wg)
+	go tables.SubCategory.Get(tables.SubCategory{}, db, SubCategories, wg)
 
 	wg.Wait()
 
-	close(products)
+	close(SubCategories)
 
-	var Products = map[string]interface{}{
-		"SubCategories": <-products,
+	var subcategory []tables.SubCategory
+
+	err := json.Unmarshal(<-SubCategories, &subcategory)
+
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 
-	json.NewEncoder(res).Encode(Products)
+	Response := make(map[string]interface{}, 1)
+
+	Response["SubCategories"] = subcategory
+
+	if err := json.NewEncoder(res).Encode(Response); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func AddSubCategories(res http.ResponseWriter, req *http.Request, params map[string]string) {
+	db := DB.Connect()
+	res.WriteHeader(http.StatusOK)
+
+	defer db.Close()
+
+	body, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	var subcategoryMap map[string]interface{}
+
+	var Subcategory tables.SubCategory
+
+	Error := json.Unmarshal(body, &subcategoryMap)
+
+	if Error != nil {
+		http.Error(res, Error.Error(), http.StatusInternalServerError)
+	}
+
+	// body data
+	Subcategory.Name = fmt.Sprintf("%s", subcategoryMap["name"])
+	Subcategory.Category = fmt.Sprintf("%s", subcategoryMap["category"])
+	Subcategory.Image = fmt.Sprintf("%s", subcategoryMap["image"])
+
+	SubCategory := make(chan []byte, 1)
+
+	wg := &sync.WaitGroup{}
+
+	wg.Add(1)
+	go tables.SubCategory.Add(Subcategory, db, SubCategory, wg)
+	wg.Wait()
+
+	close(SubCategory)
+	var subcategory map[string]interface{}
+
+	errors := json.Unmarshal(<-SubCategory, &subcategory)
+
+	if errors != nil {
+		http.Error(res, errors.Error(), http.StatusInternalServerError)
+	}
+
+	if err := json.NewEncoder(res).Encode(subcategory); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
+}
+
+func DeleteSubCategories(res http.ResponseWriter, req *http.Request, params map[string]string) {
+	if req.Method == "DELETE" {
+		db := DB.Connect()
+		res.WriteHeader(http.StatusOK)
+
+		defer db.Close()
+
+		body, err := io.ReadAll(req.Body)
+
+		if err != nil {
+			panic(err.Error())
+		}
+		var subcategoryMap map[string]interface{}
+
+		var Subcategory tables.SubCategory
+
+		Error := json.Unmarshal(body, &subcategoryMap)
+
+		if Error != nil {
+			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		}
+
+		// body data
+		Subcategory.Name = fmt.Sprintf("%s", subcategoryMap["name"])
+
+		SubCategory := make(chan []byte, 1)
+
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go tables.SubCategory.Delete(Subcategory, db, SubCategory, wg)
+		wg.Wait()
+
+		close(SubCategory)
+		var subcategory map[string]interface{}
+
+		errors := json.Unmarshal(<-SubCategory, &subcategory)
+
+		if errors != nil {
+			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		}
+
+		if err := json.NewEncoder(res).Encode(subcategory); err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
+	}
+}
+
+func UpdateSubCategories(res http.ResponseWriter, req *http.Request, params map[string]string) {
+	if req.Method == "PUT" {
+		db := DB.Connect()
+		res.WriteHeader(http.StatusOK)
+
+		defer db.Close()
+
+		body, err := io.ReadAll(req.Body)
+
+		if err != nil {
+			panic(err.Error())
+		}
+		var subcategoryMap map[string]interface{}
+
+		var Subcategory tables.SubCategory
+
+		Error := json.Unmarshal(body, &subcategoryMap)
+
+		if Error != nil {
+			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		}
+
+		// body data
+		Subcategory.Name = fmt.Sprintf("%s", subcategoryMap["name"])
+		Subcategory.Category = fmt.Sprintf("%s", subcategoryMap["category"])
+		var name string = fmt.Sprintf("%s", subcategoryMap["oldname"])
+		SubCategory := make(chan []byte, 1)
+
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go tables.SubCategory.Update(Subcategory, db, SubCategory, wg, name)
+		wg.Wait()
+
+		close(SubCategory)
+		var subcategory map[string]interface{}
+
+		errors := json.Unmarshal(<-SubCategory, &subcategory)
+
+		if errors != nil {
+			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		}
+
+		if err := json.NewEncoder(res).Encode(subcategory); err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
+	}
 }

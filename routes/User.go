@@ -1,130 +1,168 @@
 package routes
 
 import (
-	"alwadi/controller"
-	DB "alwadi/db"
+	DB "alwadi_markets/db"
+	"alwadi_markets/middleware"
+	"alwadi_markets/tables"
 	"encoding/json"
 	"io"
 	"net/http"
 	"sync"
 )
 
-func GetUserData(res http.ResponseWriter, req *http.Request) {
-	db := DB.Connect()
+func Register(res http.ResponseWriter, req *http.Request, params map[string]string) {
+	if req.Method == "POST" {
+		db := DB.Connect()
+		res.WriteHeader(http.StatusOK)
 
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
+		defer db.Close()
 
-	body, err := io.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 
-	if err != nil {
-		panic(err)
+		if err != nil {
+			panic(err.Error())
+		}
+		var userMap map[string]string
+
+		var User tables.Users
+
+		Error := json.Unmarshal(body, &userMap)
+
+		if Error != nil {
+			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		}
+		User.Email = userMap["email"]
+		User.Password = userMap["password"]
+		User.Password2 = userMap["password2"]
+		User.Phone = userMap["phone"]
+		User.Spare_phone = userMap["spare_phone"]
+		User.Username = userMap["username"]
+		User.Terms = userMap["terms"]
+
+		UserChan := make(chan []byte, 1)
+
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go tables.Users.Create(User, db, UserChan, wg)
+		wg.Wait()
+
+		close(UserChan)
+
+		var UserResponse map[string]interface{}
+
+		errors := json.Unmarshal(<-UserChan, &UserResponse)
+
+		if errors != nil {
+			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		}
+
+		if err := json.NewEncoder(res).Encode(UserResponse); err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
 	}
-
-	dataForm := make(map[string]string)
-	mapData := json.Unmarshal(body, &dataForm)
-	if mapData != nil {
-		panic(mapData.Error())
-	}
-
-	token := dataForm["authToken"]
-
-	UserInfo := controller.GetUserInfo(db, token)
-
-	json.NewEncoder(res).Encode(UserInfo)
 }
 
-func Register(res http.ResponseWriter, req *http.Request) {
-	db := DB.Connect()
+func Login(res http.ResponseWriter, req *http.Request, params map[string]string) {
+	if req.Method == "POST" {
+		db := DB.Connect()
+		res.WriteHeader(http.StatusOK)
 
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
+		defer db.Close()
 
-	res.Header().Set("Content-Type", "application/json")
+		body, err := io.ReadAll(req.Body)
 
-	res.WriteHeader(http.StatusOK)
+		if err != nil {
+			panic(err.Error())
+		}
+		var userMap map[string]string
 
-	body, err := io.ReadAll(req.Body)
+		var User tables.Users
 
-	if err != nil {
-		panic(err)
+		Error := json.Unmarshal(body, &userMap)
+
+		if Error != nil {
+			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		}
+		User.Email = userMap["email"]
+		User.Password = userMap["password"]
+
+		UserChan := make(chan []byte, 1)
+
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go tables.Users.GetByEmail(User, db, UserChan, wg)
+		wg.Wait()
+
+		close(UserChan)
+
+		var UserResponse map[string]interface{}
+
+		errors := json.Unmarshal(<-UserChan, &UserResponse)
+
+		if errors != nil {
+			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		}
+
+		if err := json.NewEncoder(res).Encode(UserResponse); err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
 	}
-
-	dataForm := make(map[string]string)
-	mapData := json.Unmarshal(body, &dataForm)
-	if mapData != nil {
-		panic(mapData.Error())
-	}
-
-	UserRes := controller.AddUser(db, dataForm)
-
-	json.NewEncoder(res).Encode(UserRes)
 }
 
-func Login(res http.ResponseWriter, req *http.Request) {
-	db := DB.Connect()
+func Profile(res http.ResponseWriter, req *http.Request, params map[string]string) {
+	if req.Method == "POST" {
+		db := DB.Connect()
+		res.WriteHeader(http.StatusOK)
 
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
+		defer db.Close()
 
-	body, err := io.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 
-	if err != nil {
-		panic(err)
+		if err != nil {
+			panic(err.Error())
+		}
+		var userMap map[string]string
+
+		var User tables.Users
+
+		Error := json.Unmarshal(body, &userMap)
+
+		if Error != nil {
+			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		}
+
+		id, e := middleware.VerifyToken(userMap["token"])
+		if e != nil {
+			http.Error(res, e.Error(), http.StatusInternalServerError)
+		}
+
+		User.Id = id
+		UserChan := make(chan []byte, 1)
+
+		wg := &sync.WaitGroup{}
+
+		wg.Add(1)
+		go tables.Users.GetById(User, db, UserChan, wg)
+		wg.Wait()
+
+		close(UserChan)
+
+		UserResponse := make(map[string]interface{})
+
+		var Users tables.Users
+
+		errors := json.Unmarshal(<-UserChan, &Users)
+
+		if errors != nil {
+			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		}
+
+		UserResponse["User"] = Users
+
+		if err := json.NewEncoder(res).Encode(UserResponse); err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
 	}
-
-	dataForm := make(map[string]string)
-	mapData := json.Unmarshal(body, &dataForm)
-	if mapData != nil {
-		panic(mapData.Error())
-	}
-
-	UserRes := controller.GetUser(db, dataForm)
-
-	json.NewEncoder(res).Encode(UserRes)
-}
-
-func ForYou(res http.ResponseWriter, req *http.Request) {
-	db := DB.Connect()
-
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
-
-	body, err := io.ReadAll(req.Body)
-
-	if err != nil {
-		panic(err)
-	}
-
-	dataForm := make(map[string]string)
-	mapData := json.Unmarshal(body, &dataForm)
-	if mapData != nil {
-		panic(mapData.Error())
-	}
-
-	productChan := make(chan any, 1)
-	wg := &sync.WaitGroup{}
-
-	wg.Add(1)
-
-	token := dataForm["authToken"]
-
-	go controller.ForYou(db, token, productChan, wg)
-	wg.Wait()
-
-	close(productChan)
-
-	pr := <- productChan
-
-	products := map[string]interface{}{
-		"Products": pr,
-	}
-
-	json.NewEncoder(res).Encode(products)
 }

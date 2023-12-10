@@ -1,37 +1,46 @@
 package routes
 
 import (
-	"alwadi/controller"
-	DB "alwadi/db"
+	DB "alwadi_markets/db"
+	"alwadi_markets/tables"
 	"encoding/json"
 	"net/http"
 	"sync"
 )
 
-type SubCategorySlug struct {
-	Slug string
-}
+func SubCategory(res http.ResponseWriter, req *http.Request, params map[string]string) {
+	res.WriteHeader(http.StatusOK)
 
-func (c SubCategorySlug) GetBySlug(res http.ResponseWriter, req *http.Request) {
 	db := DB.Connect()
 
 	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
-	Products := make(chan []controller.Products, 1)
+
+	var Product tables.Product
+
+	Product.Subcategories = params["name"]
+
+	ProductChan := make(chan []byte, 1)
+
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
-	go controller.SubCategoriesProduct(db, Products, wg, c.Slug)
+	go tables.Product.GetBySubCategory(Product, db, ProductChan, wg)
 	wg.Wait()
-	close(Products)
 
-	products := <-Products
+	close(ProductChan)
 
-	var data = map[string]interface{}{
-		"Products": products,
+	var Products []tables.Product
+
+	errors := json.Unmarshal(<-ProductChan, &Products)
+
+	if errors != nil {
+		http.Error(res, errors.Error(), http.StatusInternalServerError)
 	}
 
-	json.NewEncoder(res).Encode(data)
+	Response := make(map[string]interface{}, 1)
+	Response["Products"] = Products
+
+	if err := json.NewEncoder(res).Encode(Response); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
 }

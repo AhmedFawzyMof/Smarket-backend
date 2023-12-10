@@ -1,64 +1,80 @@
 package routes
 
 import (
-	"alwadi/cache"
-	"alwadi/controller"
-	DB "alwadi/db"
+	DB "alwadi_markets/db"
+	"alwadi_markets/tables"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"sync"
-	"time"
 )
 
-type ProductId struct {
-	Id int
-}
-
-func (p ProductId) GetById(res http.ResponseWriter, req *http.Request) {
-	db := DB.Connect()
-
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
+func ProductId(res http.ResponseWriter, req *http.Request, params map[string]string) {
 	res.WriteHeader(http.StatusOK)
+	db := DB.Connect()
+	defer db.Close()
 
-	Product := controller.ProductGetId(db, p.Id)
+	var Product tables.Product
 
+	id, _ := strconv.Atoi(params["id"])
 
-	var data = map[string]interface{}{
-		"product": Product,
+	Product.Id = id
+
+	ProductChan := make(chan []byte, 1)
+
+	wg := &sync.WaitGroup{}
+
+	wg.Add(1)
+	go tables.Product.GetById(Product, db, ProductChan, wg)
+	wg.Wait()
+
+	close(ProductChan)
+
+	var Products tables.Product
+
+	errors := json.Unmarshal(<-ProductChan, &Products)
+
+	if errors != nil {
+		http.Error(res, errors.Error(), http.StatusInternalServerError)
 	}
 
-	json.NewEncoder(res).Encode(data)
+	Response := make(map[string]interface{}, 1)
+	Response["Product"] = Products
+
+	if err := json.NewEncoder(res).Encode(Response); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+	}
 }
 
-func GetProductsOffers(res http.ResponseWriter, req *http.Request) {
-	db := DB.Connect()
-
-	defer db.Close()
-	res.Header().Set("Access-Control-Allow-Origin", "*")
-	res.Header().Set("Content-Type", "application/json")
+func ProductInOffers(res http.ResponseWriter, req *http.Request, params map[string]string) {
 	res.WriteHeader(http.StatusOK)
+	db := DB.Connect()
+	defer db.Close()
 
-	Offers, err := cache.CacheGet("Offers")
+	var Product tables.Product
 
-	if err != nil {
+	ProductChan := make(chan []byte, 1)
 
-		productChan := make(chan []controller.Products, 1)
-		wg := &sync.WaitGroup{}
-		wg.Add(1)
-		go controller.ProductOffers(db, productChan, wg)
-		wg.Wait()
-		close(productChan)
+	wg := &sync.WaitGroup{}
 
-		products := <-productChan
+	wg.Add(1)
+	go tables.Product.GetByOffers(Product, db, ProductChan, wg)
+	wg.Wait()
 
-		Products := make(map[string]interface{})
-		Products["products"] = products
+	close(ProductChan)
 
-		cache.CacheSet("Offers", Products, time.Now())
-		json.NewEncoder(res).Encode(Products)
-	} else {
-		json.NewEncoder(res).Encode(Offers)
+	var Products []tables.Product
+
+	errors := json.Unmarshal(<-ProductChan, &Products)
+
+	if errors != nil {
+		http.Error(res, errors.Error(), http.StatusInternalServerError)
+	}
+
+	Response := make(map[string]interface{}, 1)
+	Response["Products"] = Products
+
+	if err := json.NewEncoder(res).Encode(Response); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 }
