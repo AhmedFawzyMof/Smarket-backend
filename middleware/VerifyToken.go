@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -34,7 +35,6 @@ func VerifyToken(tokenString string) (string, error) {
 		id := getIDFromClaims(claims)
 		return id, nil
 	} else {
-		fmt.Println(claims, ok)
 		return "", fmt.Errorf("invalid jwt token")
 	}
 }
@@ -45,4 +45,39 @@ func getIDFromClaims(claims jwt.MapClaims) string {
 	id := idValue.(string)
 
 	return id
+}
+
+type user struct {
+	Id          string
+	Username    string
+	Email       string
+	Password    string
+	Password2   string
+	Phone       string
+	Spare_phone string
+	Role        string
+	Terms       string
+}
+
+func CheckIsAdmin(token string, db *sql.DB) bool {
+	id, errors := VerifyToken(token)
+
+	if errors != nil {
+		return true
+	}
+
+	FindEmail := db.QueryRow("SELECT * FROM Users WHERE id = ?", id)
+
+	var User user
+
+	err := FindEmail.Scan(&User.Id, &User.Username, &User.Email, &User.Password, &User.Phone, &User.Spare_phone, &User.Role)
+
+	if err != nil {
+		return false
+	}
+
+	if User.Role == "Admin" {
+		return true
+	}
+	return false
 }

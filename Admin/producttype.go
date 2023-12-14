@@ -2,6 +2,7 @@ package admin
 
 import (
 	DB "alwadi_markets/db"
+	"alwadi_markets/middleware"
 	"alwadi_markets/tables"
 	"encoding/json"
 	"fmt"
@@ -17,6 +18,26 @@ func GetTypes(res http.ResponseWriter, req *http.Request, params map[string]stri
 
 	defer db.Close()
 
+	body, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		middleware.SendError(err, res)
+	}
+	var productmap map[string]interface{}
+
+	if err := json.Unmarshal(body, &productmap); err != nil {
+		middleware.SendError(err, res)
+	}
+
+	var token string = fmt.Sprintf("%s", productmap["auth-token"])
+
+	admin := middleware.CheckIsAdmin(token, db)
+
+	if !admin {
+		err := fmt.Errorf("user is not admin")
+		middleware.SendError(err, res)
+	}
+
 	Types := make(chan []byte, 1)
 
 	wg := &sync.WaitGroup{}
@@ -31,10 +52,8 @@ func GetTypes(res http.ResponseWriter, req *http.Request, params map[string]stri
 
 	var Type []tables.ProductType
 
-	err := json.Unmarshal(<-Types, &Type)
-
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
+	if err := json.Unmarshal(<-Types, &Type); err != nil {
+		middleware.SendError(err, res)
 	}
 
 	Response := make(map[string]interface{}, 1)
@@ -42,10 +61,9 @@ func GetTypes(res http.ResponseWriter, req *http.Request, params map[string]stri
 	Response["Types"] = Type
 
 	if err := json.NewEncoder(res).Encode(Response); err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
+		middleware.SendError(err, res)
 	}
 }
-
 
 func AddTypes(res http.ResponseWriter, req *http.Request, params map[string]string) {
 	db := DB.Connect()
@@ -62,23 +80,25 @@ func AddTypes(res http.ResponseWriter, req *http.Request, params map[string]stri
 
 	var ProductType tables.ProductType
 
-	Error := json.Unmarshal(body, &productmap)
+	if err := json.Unmarshal(body, &productmap); err != nil {
+		middleware.SendError(err, res)
+	}
 
-	if Error != nil {
-		http.Error(res, Error.Error(), http.StatusInternalServerError)
+	var token string = fmt.Sprintf("%s", productmap["auth-token"])
+
+	admin := middleware.CheckIsAdmin(token, db)
+
+	if !admin {
+		err := fmt.Errorf("user is not admin")
+		middleware.SendError(err, res)
 	}
 
 	// body data
-	price, _ := strconv.Atoi(fmt.Sprintf("%s", productmap["price"]))
-	product, _ := strconv.Atoi(fmt.Sprintf("%s", productmap["product"]))
-	offer, _ := strconv.Atoi(fmt.Sprintf("%s", productmap["offer"]))
-	portion, _ := strconv.Atoi(fmt.Sprintf("%s", productmap["portion"]))
-	ProductType.Product = product
-	ProductType.Portion = portion
-	ProductType.Price = price
-	ProductType.Offer = offer
+	ProductType.Product = middleware.ConvertToInt(productmap["product"], res)
+	ProductType.Portion = middleware.ConvertToInt(productmap["portion"], res)
+	ProductType.Price = middleware.ConvertToInt(productmap["price"], res)
+	ProductType.Offer = middleware.ConvertToInt(productmap["offer"], res)
 	ProductType.Uint = fmt.Sprintf("%s", productmap["uint"])
-	
 
 	Types := make(chan []byte, 1)
 
@@ -91,63 +111,67 @@ func AddTypes(res http.ResponseWriter, req *http.Request, params map[string]stri
 	close(Types)
 	var products map[string]interface{}
 
-	errors := json.Unmarshal(<-Types, &products)
-
-	if errors != nil {
-		http.Error(res, errors.Error(), http.StatusInternalServerError)
+	if err := json.Unmarshal(<-Types, &products); err != nil {
+		middleware.SendError(err, res)
 	}
 
 	if err := json.NewEncoder(res).Encode(products); err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
+		middleware.SendError(err, res)
 	}
 }
 
 func DeleteTypes(res http.ResponseWriter, req *http.Request, params map[string]string) {
-	if req.Method == "DELETE"{
-	db := DB.Connect()
-	res.WriteHeader(http.StatusOK)
+	if req.Method == "DELETE" {
+		db := DB.Connect()
+		res.WriteHeader(http.StatusOK)
 
-	defer db.Close()
+		defer db.Close()
 
-	body, err := io.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 
-	if err != nil {
-		panic(err.Error())
-	}
-	var productmap map[string]interface{}
+		if err != nil {
+			panic(err.Error())
+		}
+		var productmap map[string]interface{}
 
-	var ProductType tables.ProductType
+		var ProductType tables.ProductType
 
-	Error := json.Unmarshal(body, &productmap)
+		if err := json.Unmarshal(body, &productmap); err != nil {
+			middleware.SendError(err, res)
+		}
 
-	if Error != nil {
-		http.Error(res, Error.Error(), http.StatusInternalServerError)
-	}
+		var token string = fmt.Sprintf("%s", productmap["auth-token"])
 
-	// body data
-	id, _ := strconv.Atoi(fmt.Sprintf("%s", productmap["id"]))
-	ProductType.Id = id
-	
+		admin := middleware.CheckIsAdmin(token, db)
 
-	Types := make(chan []byte, 1)
+		if !admin {
+			err := fmt.Errorf("user is not admin")
+			middleware.SendError(err, res)
+		}
 
-	wg := &sync.WaitGroup{}
+		// body data
+		id, _ := strconv.Atoi(fmt.Sprintf("%s", productmap["id"]))
+		ProductType.Id = id
 
-	wg.Add(1)
-	go tables.ProductType.Delete(ProductType, db, Types, wg)
-	wg.Wait()
+		Types := make(chan []byte, 1)
 
-	close(Types)
-	var products map[string]interface{}
+		wg := &sync.WaitGroup{}
 
-	errors := json.Unmarshal(<-Types, &products)
+		wg.Add(1)
+		go tables.ProductType.Delete(ProductType, db, Types, wg)
+		wg.Wait()
 
-	if errors != nil {
-		http.Error(res, errors.Error(), http.StatusInternalServerError)
-	}
+		close(Types)
+		var products map[string]interface{}
 
-	if err := json.NewEncoder(res).Encode(products); err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-	}
+		errors := json.Unmarshal(<-Types, &products)
+
+		if errors != nil {
+			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		}
+
+		if err := json.NewEncoder(res).Encode(products); err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+		}
 	}
 }

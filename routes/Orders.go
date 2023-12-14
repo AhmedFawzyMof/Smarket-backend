@@ -28,7 +28,7 @@ func OrderHistory(res http.ResponseWriter, req *http.Request, params map[string]
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			panic(err.Error())
+			middleware.SendError(err, res)
 		}
 
 		var orderMap map[string]interface{}
@@ -39,18 +39,16 @@ func OrderHistory(res http.ResponseWriter, req *http.Request, params map[string]
 
 		wg := &sync.WaitGroup{}
 
-		Error := json.Unmarshal(body, &orderMap)
-
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &orderMap); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		var token string = fmt.Sprintf("%s", orderMap["token"])
 
-		id, e := middleware.VerifyToken(token)
+		id, err := middleware.VerifyToken(token)
 
-		if e != nil {
-			http.Error(res, e.Error(), http.StatusInternalServerError)
+		if err != nil {
+			middleware.SendError(err, res)
 		}
 
 		Order.User = id
@@ -65,21 +63,19 @@ func OrderHistory(res http.ResponseWriter, req *http.Request, params map[string]
 
 		Response := make(map[string]interface{})
 
-		errors := json.Unmarshal(<-orderChan, &OrderResponse)
-
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-orderChan, &OrderResponse); err != nil {
+			middleware.SendError(err, res)
 		}
 		Response["Orders"] = OrderResponse
 
 		if err := json.NewEncoder(res).Encode(Response); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }
 
 func CancelOrder(res http.ResponseWriter, req *http.Request, params map[string]string) {
-	if req.Method == "POST" {
+	if req.Method == "DELETE" {
 		res.WriteHeader(http.StatusOK)
 		db := DB.Connect()
 		defer db.Close()
@@ -87,7 +83,7 @@ func CancelOrder(res http.ResponseWriter, req *http.Request, params map[string]s
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			panic(err.Error())
+			middleware.SendError(err, res)
 		}
 
 		var orderMap map[string]string
@@ -98,19 +94,17 @@ func CancelOrder(res http.ResponseWriter, req *http.Request, params map[string]s
 
 		wg := &sync.WaitGroup{}
 
-		Error := json.Unmarshal(body, &orderMap)
-
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &orderMap); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		var token string = orderMap["token"]
 		var order string = orderMap["order"]
 
-		id, e := middleware.VerifyToken(token)
+		id, err := middleware.VerifyToken(token)
 
-		if e != nil {
-			http.Error(res, e.Error(), http.StatusInternalServerError)
+		if err != nil {
+			middleware.SendError(err, res)
 		}
 
 		Order.User = id
@@ -124,14 +118,12 @@ func CancelOrder(res http.ResponseWriter, req *http.Request, params map[string]s
 
 		Response := make(map[string]interface{})
 
-		errors := json.Unmarshal(<-orderChan, &Response)
-
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-orderChan, &Response); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		if err := json.NewEncoder(res).Encode(Response); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }
@@ -145,7 +137,7 @@ func OrderPage(res http.ResponseWriter, req *http.Request, params map[string]str
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 
 		var orderMap map[string]string
@@ -158,19 +150,17 @@ func OrderPage(res http.ResponseWriter, req *http.Request, params map[string]str
 
 		wg := &sync.WaitGroup{}
 
-		Error := json.Unmarshal(body, &orderMap)
-
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &orderMap); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		var token string = orderMap["token"]
 		var order string = params["id"]
 
-		id, e := middleware.VerifyToken(token)
+		id, err := middleware.VerifyToken(token)
 
-		if e != nil {
-			http.Error(res, e.Error(), http.StatusInternalServerError)
+		if err != nil {
+			middleware.SendError(err, res)
 		}
 
 		Order.User = id
@@ -189,22 +179,19 @@ func OrderPage(res http.ResponseWriter, req *http.Request, params map[string]str
 
 		Response := make(map[string]interface{})
 
-		errors := json.Unmarshal(<-orderChan, &OrderResponse)
-		erro := json.Unmarshal(<-orderProductChan, &OrderProductsResponse)
-
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-orderChan, &OrderResponse); err != nil {
+			middleware.SendError(err, res)
 		}
 
-		if erro != nil {
-			http.Error(res, erro.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-orderProductChan, &OrderProductsResponse); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		Response["Order"] = OrderResponse
 		Response["Products"] = OrderProductsResponse
 
 		if err := json.NewEncoder(res).Encode(Response); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }
@@ -217,17 +204,15 @@ func Order(res http.ResponseWriter, req *http.Request, params map[string]string)
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 
 		var OrderReq map[string]interface{}
 
 		var Orders tables.Orders
 
-		Error := json.Unmarshal(body, &OrderReq)
-
-		if Error != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &OrderReq); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		var Order order
@@ -235,10 +220,10 @@ func Order(res http.ResponseWriter, req *http.Request, params map[string]string)
 
 		middleware.FillStruct(OrderReq, &Order)
 
-		id, e := middleware.VerifyToken(Order.Token)
+		id, err := middleware.VerifyToken(Order.Token)
 
-		if e != nil {
-			http.Error(res, e.Error(), http.StatusInternalServerError)
+		if err != nil {
+			middleware.SendError(err, res)
 		}
 
 		Address.User = id
@@ -249,18 +234,16 @@ func Order(res http.ResponseWriter, req *http.Request, params map[string]string)
 
 		addressChan := make(chan []byte, 1)
 
-		orderId, Er := tables.Orders.Add(Orders, db)
+		orderId, err := tables.Orders.Add(Orders, db)
 
-		if Er != nil {
-			http.Error(res, Er.Error(), http.StatusInternalServerError)
+		if err != nil {
+			middleware.SendError(err, res)
 		}
 
 		middleware.FillStructInterface(Order.Address, &Address)
 
-		Err := createOrderProducts(Order.Products, orderId, db)
-
-		if Err != nil {
-			http.Error(res, Err.Error(), http.StatusInternalServerError)
+		if err := createOrderProducts(Order.Products, orderId, db); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		wg.Add(1)
@@ -273,14 +256,12 @@ func Order(res http.ResponseWriter, req *http.Request, params map[string]string)
 
 		Response := make(map[string]interface{})
 
-		errors := json.Unmarshal(<-addressChan, &Response)
-
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-addressChan, &Response); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		if err := json.NewEncoder(res).Encode(Response); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 
 	}
@@ -302,5 +283,4 @@ func createOrderProducts(orderProducts []interface{}, orderId string, db *sql.DB
 	}
 
 	return nil
-
 }

@@ -21,23 +21,22 @@ func AddFavourite(res http.ResponseWriter, req *http.Request, params map[string]
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			panic(err.Error())
+			middleware.SendError(err, res)
 		}
 		var favMap map[string]interface{}
 
 		var Favourite tables.Favourite
 
-		Error := json.Unmarshal(body, &favMap)
-
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &favMap); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		var token string = fmt.Sprintf("%s", favMap["token"])
 
-		id, e := middleware.VerifyToken(token)
-		if e != nil {
-			http.Error(res, e.Error(), http.StatusInternalServerError)
+		id, err := middleware.VerifyToken(token)
+
+		if err != nil {
+			middleware.SendError(err, res)
 		}
 
 		var productfloat64 float64 = favMap["product"].(float64)
@@ -59,14 +58,12 @@ func AddFavourite(res http.ResponseWriter, req *http.Request, params map[string]
 
 		var FavResponse map[string]interface{}
 
-		errors := json.Unmarshal(<-FavChan, &FavResponse)
-
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-FavChan, &FavResponse); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		if err := json.NewEncoder(res).Encode(FavResponse); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }
@@ -81,23 +78,22 @@ func GetFavourite(res http.ResponseWriter, req *http.Request, params map[string]
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			panic(err.Error())
+			middleware.SendError(err, res)
 		}
+
 		var favMap map[string]interface{}
 
 		var Favourite tables.Favourite
 
-		Error := json.Unmarshal(body, &favMap)
-
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &favMap); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		var token string = fmt.Sprintf("%s", favMap["token"])
 
-		id, e := middleware.VerifyToken(token)
-		if e != nil {
-			http.Error(res, e.Error(), http.StatusInternalServerError)
+		id, err := middleware.VerifyToken(token)
+		if err != nil {
+			middleware.SendError(err, res)
 		}
 
 		Favourite.User = id
@@ -114,10 +110,8 @@ func GetFavourite(res http.ResponseWriter, req *http.Request, params map[string]
 
 		var FavProducts []tables.Product
 
-		errors := json.Unmarshal(<-FavChan, &FavProducts)
-
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-FavChan, &FavProducts); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		Response := make(map[string]interface{}, 1)
@@ -125,7 +119,7 @@ func GetFavourite(res http.ResponseWriter, req *http.Request, params map[string]
 		Response["Products"] = FavProducts
 
 		if err := json.NewEncoder(res).Encode(Response); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }
@@ -140,23 +134,22 @@ func DeleteFavourite(res http.ResponseWriter, req *http.Request, params map[stri
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			panic(err.Error())
+			middleware.SendError(err, res)
 		}
 		var favMap map[string]interface{}
 
 		var Favourite tables.Favourite
 
-		Error := json.Unmarshal(body, &favMap)
-
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &favMap); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		var token string = fmt.Sprintf("%s", favMap["token"])
 
-		id, e := middleware.VerifyToken(token)
-		if e != nil {
-			http.Error(res, e.Error(), http.StatusInternalServerError)
+		id, err := middleware.VerifyToken(token)
+
+		if err != nil {
+			middleware.SendError(err, res)
 		}
 
 		var productfloat64 float64 = favMap["product"].(float64)
@@ -178,14 +171,12 @@ func DeleteFavourite(res http.ResponseWriter, req *http.Request, params map[stri
 
 		var FavResponse map[string]interface{}
 
-		errors := json.Unmarshal(<-FavChan, &FavResponse)
-
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-FavChan, &FavResponse); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		if err := json.NewEncoder(res).Encode(FavResponse); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }

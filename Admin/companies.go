@@ -2,6 +2,7 @@ package admin
 
 import (
 	DB "alwadi_markets/db"
+	"alwadi_markets/middleware"
 	"alwadi_markets/tables"
 	"encoding/json"
 	"fmt"
@@ -15,6 +16,26 @@ func GetCompanies(res http.ResponseWriter, req *http.Request, params map[string]
 	res.WriteHeader(http.StatusOK)
 
 	defer db.Close()
+
+	body, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		middleware.SendError(err, res)
+	}
+	var companyMap map[string]interface{}
+
+	if err := json.Unmarshal(body, &companyMap); err != nil {
+		middleware.SendError(err, res)
+	}
+
+	var token string = fmt.Sprintf("%s", companyMap["auth-token"])
+
+	admin := middleware.CheckIsAdmin(token, db)
+
+	if !admin {
+		err := fmt.Errorf("user is not admin")
+		middleware.SendError(err, res)
+	}
 
 	Companies := make(chan []byte, 1)
 
@@ -30,9 +51,7 @@ func GetCompanies(res http.ResponseWriter, req *http.Request, params map[string]
 
 	var company []tables.Company
 
-	err := json.Unmarshal(<-Companies, &company)
-
-	if err != nil {
+	if err := json.Unmarshal(<-Companies, &company); err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -54,16 +73,23 @@ func AddCompanies(res http.ResponseWriter, req *http.Request, params map[string]
 	body, err := io.ReadAll(req.Body)
 
 	if err != nil {
-		panic(err.Error())
+		middleware.SendError(err, res)
 	}
 	var companyMap map[string]interface{}
 
 	var Companies tables.Company
 
-	Error := json.Unmarshal(body, &companyMap)
+	if err := json.Unmarshal(body, &companyMap); err != nil {
+		middleware.SendError(err, res)
+	}
 
-	if Error != nil {
-		http.Error(res, Error.Error(), http.StatusInternalServerError)
+	var token string = fmt.Sprintf("%s", companyMap["auth-token"])
+
+	admin := middleware.CheckIsAdmin(token, db)
+
+	if !admin {
+		err := fmt.Errorf("user is not admin")
+		middleware.SendError(err, res)
 	}
 
 	// body data
@@ -80,10 +106,8 @@ func AddCompanies(res http.ResponseWriter, req *http.Request, params map[string]
 	close(Company)
 	var company map[string]interface{}
 
-	errors := json.Unmarshal(<-Company, &company)
-
-	if errors != nil {
-		http.Error(res, errors.Error(), http.StatusInternalServerError)
+	if err := json.Unmarshal(<-Company, &company); err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 
 	if err := json.NewEncoder(res).Encode(company); err != nil {
@@ -101,16 +125,23 @@ func EditCompanies(res http.ResponseWriter, req *http.Request, params map[string
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			panic(err.Error())
+			middleware.SendError(err, res)
 		}
 		var companyMap map[string]interface{}
 
 		var Companies tables.Company
 
-		Error := json.Unmarshal(body, &companyMap)
+		if err := json.Unmarshal(body, &companyMap); err != nil {
+			middleware.SendError(err, res)
+		}
 
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		var token string = fmt.Sprintf("%s", companyMap["auth-token"])
+
+		admin := middleware.CheckIsAdmin(token, db)
+
+		if !admin {
+			err := fmt.Errorf("user is not admin")
+			middleware.SendError(err, res)
 		}
 
 		// body data
@@ -128,14 +159,13 @@ func EditCompanies(res http.ResponseWriter, req *http.Request, params map[string
 		close(Company)
 		var company map[string]interface{}
 
-		errors := json.Unmarshal(<-Company, &company)
+		if err := json.Unmarshal(<-Company, &company); err != nil {
+			middleware.SendError(err, res)
 
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
 		}
 
 		if err := json.NewEncoder(res).Encode(company); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }
@@ -150,18 +180,25 @@ func DeleteCompanies(res http.ResponseWriter, req *http.Request, params map[stri
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			panic(err.Error())
+			middleware.SendError(err, res)
 		}
+
 		var companyMap map[string]interface{}
 
 		var Companies tables.Company
 
-		Error := json.Unmarshal(body, &companyMap)
-
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &companyMap); err != nil {
+			middleware.SendError(err, res)
 		}
 
+		var token string = fmt.Sprintf("%s", companyMap["auth-token"])
+
+		admin := middleware.CheckIsAdmin(token, db)
+
+		if !admin {
+			err := fmt.Errorf("user is not admin")
+			middleware.SendError(err, res)
+		}
 		// body data
 		Companies.Name = fmt.Sprintf("%s", companyMap["name"])
 
@@ -179,11 +216,12 @@ func DeleteCompanies(res http.ResponseWriter, req *http.Request, params map[stri
 		errors := json.Unmarshal(<-Company, &company)
 
 		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
+
 		}
 
 		if err := json.NewEncoder(res).Encode(company); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }

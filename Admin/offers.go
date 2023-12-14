@@ -2,6 +2,7 @@ package admin
 
 import (
 	DB "alwadi_markets/db"
+	"alwadi_markets/middleware"
 	"alwadi_markets/tables"
 	"encoding/json"
 	"fmt"
@@ -16,6 +17,26 @@ func GetOffers(res http.ResponseWriter, req *http.Request, params map[string]str
 	res.WriteHeader(http.StatusOK)
 
 	defer db.Close()
+	body, err := io.ReadAll(req.Body)
+
+	if err != nil {
+		panic(err.Error())
+	}
+
+	var offersMap map[string]interface{}
+
+	if err := json.Unmarshal(body, &offersMap); err != nil {
+		middleware.SendError(err, res)
+	}
+
+	var token string = fmt.Sprintf("%s", offersMap["auth-token"])
+
+	admin := middleware.CheckIsAdmin(token, db)
+
+	if !admin {
+		err := fmt.Errorf("user is not admin")
+		middleware.SendError(err, res)
+	}
 
 	Offers := make(chan []byte, 1)
 
@@ -31,9 +52,7 @@ func GetOffers(res http.ResponseWriter, req *http.Request, params map[string]str
 
 	var offers []tables.Offer
 
-	err := json.Unmarshal(<-Offers, &offers)
-
-	if err != nil {
+	if err := json.Unmarshal(<-Offers, &offers); err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 	}
 
@@ -62,21 +81,27 @@ func AddOffers(res http.ResponseWriter, req *http.Request, params map[string]str
 
 	var Offer tables.Offer
 
-	Error := json.Unmarshal(body, &offersMap)
+	if err := json.Unmarshal(body, &offersMap); err != nil {
+		middleware.SendError(err, res)
+	}
 
-	if Error != nil {
-		http.Error(res, Error.Error(), http.StatusInternalServerError)
+	var token string = fmt.Sprintf("%s", offersMap["auth-token"])
+
+	admin := middleware.CheckIsAdmin(token, db)
+
+	if !admin {
+		err := fmt.Errorf("user is not admin")
+		middleware.SendError(err, res)
 	}
 
 	productId, Err := strconv.Atoi(fmt.Sprintf("%s", offersMap["product"]))
 
 	if Err != nil {
-		http.Error(res, Err.Error(), http.StatusInternalServerError)
+		middleware.SendError(Err, res)
 	}
 
 	Offer.Product = productId
 	Offer.Image = fmt.Sprintf("%s", offersMap["image"])
-
 
 	Offers := make(chan []byte, 1)
 
@@ -92,10 +117,8 @@ func AddOffers(res http.ResponseWriter, req *http.Request, params map[string]str
 
 	var offers []tables.Offer
 
-	erR := json.Unmarshal(<-Offers, &offers)
-
-	if erR != nil {
-		http.Error(res, erR.Error(), http.StatusInternalServerError)
+	if err := json.Unmarshal(<-Offers, &offers); err != nil {
+		middleware.SendError(err, res)
 	}
 
 	Response := make(map[string]interface{}, 1)
@@ -103,7 +126,7 @@ func AddOffers(res http.ResponseWriter, req *http.Request, params map[string]str
 	Response["Offers"] = offers
 
 	if err := json.NewEncoder(res).Encode(Response); err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
+		middleware.SendError(err, res)
 	}
 }
 
@@ -123,10 +146,17 @@ func DeleteOffers(res http.ResponseWriter, req *http.Request, params map[string]
 
 		var Offer tables.Offer
 
-		Error := json.Unmarshal(body, &offersMap)
+		if err := json.Unmarshal(body, &offersMap); err != nil {
+			middleware.SendError(err, res)
+		}
 
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		var token string = fmt.Sprintf("%s", offersMap["auth-token"])
+
+		admin := middleware.CheckIsAdmin(token, db)
+
+		if !admin {
+			err := fmt.Errorf("user is not admin")
+			middleware.SendError(err, res)
 		}
 
 		idFloat, ok := offersMap["id"].(float64)

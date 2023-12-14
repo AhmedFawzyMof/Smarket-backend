@@ -2,6 +2,7 @@ package routes
 
 import (
 	DB "alwadi_markets/db"
+	"alwadi_markets/middleware"
 	"alwadi_markets/tables"
 	"encoding/json"
 	"net/http"
@@ -31,16 +32,14 @@ func SubCategory(res http.ResponseWriter, req *http.Request, params map[string]s
 
 	var Products []tables.Product
 
-	errors := json.Unmarshal(<-ProductChan, &Products)
-
-	if errors != nil {
-		http.Error(res, errors.Error(), http.StatusInternalServerError)
+	if err := json.Unmarshal(<-ProductChan, &Products); err != nil {
+		middleware.SendError(err, res)
 	}
 
 	Response := make(map[string]interface{}, 1)
 	Response["Products"] = Products
 
 	if err := json.NewEncoder(res).Encode(Response); err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
+		middleware.SendError(err, res)
 	}
 }

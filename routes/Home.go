@@ -2,15 +2,15 @@ package routes
 
 import (
 	DB "alwadi_markets/db"
+	"alwadi_markets/middleware"
 	"alwadi_markets/tables"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"sync"
 )
 
 func Home(res http.ResponseWriter, req *http.Request, params map[string]string) {
-		res.WriteHeader(http.StatusOK)
+	res.WriteHeader(http.StatusOK)
 	db := DB.Connect()
 	defer db.Close()
 
@@ -36,23 +36,19 @@ func Home(res http.ResponseWriter, req *http.Request, params map[string]string) 
 	err := json.Unmarshal(<-Categories, &category)
 
 	if err != nil {
-		fmt.Println(err.Error())
+		middleware.SendError(err, res)
 	}
 
 	var product []tables.Product
 
-	Err := json.Unmarshal(<-Products, &product)
-
-	if Err != nil {
-		http.Error(res, Err.Error(), http.StatusInternalServerError)
+	if err := json.Unmarshal(<-Products, &product); err != nil {
+		middleware.SendError(err, res)
 	}
 
 	var offer []tables.Offer
 
-	ERR := json.Unmarshal(<-Offers, &offer)
-
-	if ERR != nil {
-		fmt.Println(ERR.Error())
+	if err := json.Unmarshal(<-Offers, &offer); err != nil {
+		middleware.SendError(err, res)
 	}
 
 	Respones := make(map[string]interface{}, 3)
@@ -60,5 +56,7 @@ func Home(res http.ResponseWriter, req *http.Request, params map[string]string) 
 	Respones["Categories"] = category
 	Respones["Offers"] = offer
 
-	json.NewEncoder(res).Encode(Respones)
+	if err := json.NewEncoder(res).Encode(Respones); err != nil {
+		middleware.SendError(err, res)
+	}
 }

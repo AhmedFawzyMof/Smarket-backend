@@ -43,8 +43,8 @@ func (f Favourite) Add(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
 }
 
 func (f Favourite) Get(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
-	var Products []int
-	var FavProducts []Product
+	var Products []Product
+	var Favourites []Favourite
 	getProducts, err := db.Query("SELECT * FROM Favourite WHERE user = ?", f.User)
 
 	if err != nil {
@@ -60,46 +60,48 @@ func (f Favourite) Get(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
 			panic(err.Error())
 		}
 
-		Products = append(Products, Fav.Product)
+		Favourites = append(Favourites, Fav)
 	}
 
 	ids := ""
 
-	for i, id := range Products {
+	for i, F := range Favourites {
+		fmt.Println(F.Product)
+		if len(Favourites) > 0 {
+			if i == 0 {
+				ids += fmt.Sprintf("%d", F.Product)
+			}
 
-		if len(Products) > 0 {
-			if i >= 0 {
-				ids += fmt.Sprintf("%d", id)
+			if i > 0 {
+				ids += fmt.Sprintf(",%d", F.Product)
 			}
-			if i == len(Products)-1 {
-				ids += fmt.Sprintf(",%d", id)
-			}
+
+		}
+	}
+
+	var stmt string = fmt.Sprintf("SELECT * FROM Products WHERE id IN (%s)", ids)
+	if ids != "" {
+		products, err := db.Query(stmt)
+
+		if err != nil {
+			fmt.Println(stmt, err)
 		}
 
-		var stmt string = fmt.Sprintf("SELECT * FROM Products WHERE id IN (%s)", ids)
-		if ids != "" {
-			products, err := db.Query(stmt)
+		defer products.Close()
 
-			if err != nil {
-				fmt.Println(stmt, err)
+		for products.Next() {
+			var Product Product
+
+			if err := products.Scan(&Product.Id, &Product.Name, &Product.Description, &Product.Company, &Product.Subcategories, &Product.Category, &Product.Image, &Product.Available, &Product.Price, &Product.Offer); err != nil {
+				panic(err.Error())
 			}
 
-			defer products.Close()
-
-			for products.Next() {
-				var Product Product
-
-				if err := products.Scan(&Product.Id, &Product.Name, &Product.Description, &Product.Company, &Product.Subcategories, &Product.Category, &Product.Image, &Product.Available, &Product.Price, &Product.Offer); err != nil {
-					panic(err.Error())
-				}
-
-				FavProducts = append(FavProducts, Product)
-			}
-
+			Products = append(Products, Product)
 		}
 
 	}
-	products, err := json.Marshal(FavProducts)
+
+	products, err := json.Marshal(Products)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

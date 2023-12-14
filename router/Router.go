@@ -90,8 +90,17 @@ func Router(w http.ResponseWriter, r *http.Request) {
 		path:    "/order",
 		handler: middleware.WithHeaders(R.Order),
 	})
+
+	routes = append(routes, route{
+		path:    "/delete",
+		handler: middleware.WithHeaders(R.CancelOrder),
+	})
 	// Admin Routes
 
+	routes = append(routes, route{
+		path:    "/admin/login",
+		handler: middleware.WithHeaders(admin.AdminLogin),
+	})
 	routes = append(routes, route{
 		path:    "/admin/products",
 		handler: middleware.WithHeaders(admin.GetProducts),
@@ -113,8 +122,16 @@ func Router(w http.ResponseWriter, r *http.Request) {
 		handler: middleware.WithHeaders(admin.GetOrders),
 	})
 	routes = append(routes, route{
-		path: "/admin/users",
-		// handler: ,
+		path:    "/admin/order/edit",
+		handler: middleware.WithHeaders(admin.EditOrder),
+	})
+	routes = append(routes, route{
+		path:    "/admin/order/:id",
+		handler: middleware.WithHeaders(admin.OrderPage),
+	})
+	routes = append(routes, route{
+		path:    "/admin/users",
+		handler: middleware.WithHeaders(admin.GetUsers),
 	})
 	routes = append(routes, route{
 		path:    "/admin/producttype",

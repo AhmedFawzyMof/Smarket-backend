@@ -70,7 +70,7 @@ func AddSubCategories(res http.ResponseWriter, req *http.Request, params map[str
 	Subcategory.Name = fmt.Sprintf("%s", subcategoryMap["name"])
 	Subcategory.Category = fmt.Sprintf("%s", subcategoryMap["category"])
 	Subcategory.Image = fmt.Sprintf("%s", subcategoryMap["image"])
-
+	fmt.Printf(Subcategory.Category)
 	SubCategory := make(chan []byte, 1)
 
 	wg := &sync.WaitGroup{}

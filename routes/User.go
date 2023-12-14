@@ -20,16 +20,14 @@ func Register(res http.ResponseWriter, req *http.Request, params map[string]stri
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			panic(err.Error())
+			middleware.SendError(err, res)
 		}
 		var userMap map[string]string
 
 		var User tables.Users
 
-		Error := json.Unmarshal(body, &userMap)
-
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &userMap); err != nil {
+			middleware.SendError(err, res)
 		}
 		User.Email = userMap["email"]
 		User.Password = userMap["password"]
@@ -51,14 +49,12 @@ func Register(res http.ResponseWriter, req *http.Request, params map[string]stri
 
 		var UserResponse map[string]interface{}
 
-		errors := json.Unmarshal(<-UserChan, &UserResponse)
-
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-UserChan, &UserResponse); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		if err := json.NewEncoder(res).Encode(UserResponse); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }
@@ -73,16 +69,14 @@ func Login(res http.ResponseWriter, req *http.Request, params map[string]string)
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			panic(err.Error())
+			middleware.SendError(err, res)
 		}
 		var userMap map[string]string
 
 		var User tables.Users
 
-		Error := json.Unmarshal(body, &userMap)
-
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &userMap); err != nil {
+			middleware.SendError(err, res)
 		}
 		User.Email = userMap["email"]
 		User.Password = userMap["password"]
@@ -99,14 +93,12 @@ func Login(res http.ResponseWriter, req *http.Request, params map[string]string)
 
 		var UserResponse map[string]interface{}
 
-		errors := json.Unmarshal(<-UserChan, &UserResponse)
-
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-UserChan, &UserResponse); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		if err := json.NewEncoder(res).Encode(UserResponse); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }
@@ -121,21 +113,19 @@ func Profile(res http.ResponseWriter, req *http.Request, params map[string]strin
 		body, err := io.ReadAll(req.Body)
 
 		if err != nil {
-			panic(err.Error())
+			middleware.SendError(err, res)
 		}
 		var userMap map[string]string
 
 		var User tables.Users
 
-		Error := json.Unmarshal(body, &userMap)
-
-		if Error != nil {
-			http.Error(res, Error.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(body, &userMap); err != nil {
+			middleware.SendError(err, res)
 		}
 
-		id, e := middleware.VerifyToken(userMap["token"])
-		if e != nil {
-			http.Error(res, e.Error(), http.StatusInternalServerError)
+		id, err := middleware.VerifyToken(userMap["token"])
+		if err != nil {
+			middleware.SendError(err, res)
 		}
 
 		User.Id = id
@@ -153,16 +143,14 @@ func Profile(res http.ResponseWriter, req *http.Request, params map[string]strin
 
 		var Users tables.Users
 
-		errors := json.Unmarshal(<-UserChan, &Users)
-
-		if errors != nil {
-			http.Error(res, errors.Error(), http.StatusInternalServerError)
+		if err := json.Unmarshal(<-UserChan, &Users); err != nil {
+			middleware.SendError(err, res)
 		}
 
 		UserResponse["User"] = Users
 
 		if err := json.NewEncoder(res).Encode(UserResponse); err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
+			middleware.SendError(err, res)
 		}
 	}
 }

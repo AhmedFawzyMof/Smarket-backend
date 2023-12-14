@@ -2,6 +2,9 @@ package middleware
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
 )
 
 func FillStruct(data map[string]interface{}, result interface{}) error {
@@ -26,4 +29,14 @@ func FillStructInterface(data interface{}, result interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func ConvertToInt(numberInterface interface{}, res http.ResponseWriter) int {
+	Int, err := strconv.Atoi(fmt.Sprintf("%s", numberInterface))
+
+	if err != nil {
+		SendError(err, res)
+	}
+
+	return Int
 }

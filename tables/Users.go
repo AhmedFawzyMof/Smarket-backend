@@ -152,3 +152,29 @@ func (u Users) GetById(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
 
 	response <- res
 }
+
+func (u Users) Get(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
+	defer wg.Done()
+	var Response []Users
+	users, err := db.Query("SELECT * FROM Users")
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
+	defer users.Close()
+
+	for users.Next() {
+		var user Users
+
+		if err := users.Scan(&user.Id, &user.Username, &user.Email, &user.Password, &user.Phone, &user.Spare_phone, &user.Role); err != nil {
+			panic(err.Error())
+		}
+
+		Response = append(Response, user)
+	}
+	res, err := json.Marshal(Response)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	response <- res
+}

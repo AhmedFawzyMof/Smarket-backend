@@ -20,15 +20,8 @@ func (sc SubCategory) Add(db *sql.DB, response chan []byte, wg *sync.WaitGroup) 
 	_, err := db.Exec("INSERT INTO `SubCategories`(`name`, `category`, `image`) VALUES (?, ?, ?)", sc.Name, sc.Category, sc.Image)
 	if err != nil {
 		Response["Error"] = true
-
-		res, err := json.Marshal(Response)
-
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		response <- res
-		wg.Done()
+		middleware.SendResponse(response, Response)
+		return
 	}
 
 	Response["Error"] = false
