@@ -143,10 +143,8 @@ func OrderPage(res http.ResponseWriter, req *http.Request, params map[string]str
 		var orderMap map[string]string
 
 		var Order tables.Orders
-		var OrderProduct tables.OrderProducts
 
 		orderChan := make(chan []byte, 1)
-		orderProductChan := make(chan []byte, 1)
 
 		wg := &sync.WaitGroup{}
 
@@ -165,30 +163,18 @@ func OrderPage(res http.ResponseWriter, req *http.Request, params map[string]str
 
 		Order.User = id
 		Order.Id = order
-		OrderProduct.Order = order
 
-		wg.Add(2)
-		go tables.Orders.GetForUser(Order, db, orderChan, wg)
-		go tables.OrderProducts.GetByOrder(OrderProduct, db, orderProductChan, wg)
+		wg.Add(1)
+		go tables.Orders.OrderDitails(Order, db, orderChan, wg)
 		wg.Wait()
 
 		close(orderChan)
 
-		var OrderResponse []tables.Orders
-		var OrderProductsResponse []tables.OP
-
 		Response := make(map[string]interface{})
 
-		if err := json.Unmarshal(<-orderChan, &OrderResponse); err != nil {
+		if err := json.Unmarshal(<-orderChan, &Response); err != nil {
 			middleware.SendError(err, res)
 		}
-
-		if err := json.Unmarshal(<-orderProductChan, &OrderProductsResponse); err != nil {
-			middleware.SendError(err, res)
-		}
-
-		Response["Order"] = OrderResponse
-		Response["Products"] = OrderProductsResponse
 
 		if err := json.NewEncoder(res).Encode(Response); err != nil {
 			middleware.SendError(err, res)
