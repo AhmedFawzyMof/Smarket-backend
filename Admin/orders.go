@@ -3,7 +3,7 @@ package admin
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -26,7 +26,7 @@ func GetOrders(res http.ResponseWriter, req *http.Request, params map[string]str
 
 		var orderMap map[string]interface{}
 
-		var Order tables.Orders
+		var Order models.Orders
 
 		if err := json.Unmarshal(body, &orderMap); err != nil {
 			middleware.SendError(err, res)
@@ -46,12 +46,12 @@ func GetOrders(res http.ResponseWriter, req *http.Request, params map[string]str
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.Orders.GetAll(Order, db, orderChan, wg)
+		go models.Orders.GetAll(Order, db, orderChan, wg)
 		wg.Wait()
 
 		close(orderChan)
 
-		var OrderResponse []tables.Orders
+		var OrderResponse []models.Orders
 
 		Response := make(map[string]interface{})
 
@@ -81,7 +81,7 @@ func OrderPage(res http.ResponseWriter, req *http.Request, params map[string]str
 
 		var orderMap map[string]interface{}
 
-		var Order tables.Orders
+		var Order models.Orders
 
 		orderChan := make(chan []byte, 1)
 
@@ -104,7 +104,7 @@ func OrderPage(res http.ResponseWriter, req *http.Request, params map[string]str
 		Order.Id = order
 
 		wg.Add(1)
-		go tables.Orders.OrderDitails(Order, db, orderChan, wg)
+		go models.Orders.OrderDitails(Order, db, orderChan, wg)
 		wg.Wait()
 
 		close(orderChan)
@@ -135,7 +135,7 @@ func EditOrder(res http.ResponseWriter, req *http.Request, params map[string]str
 
 		var orderMap map[string]interface{}
 
-		var Order tables.Orders
+		var Order models.Orders
 
 		orderChan := make(chan []byte, 1)
 
@@ -174,7 +174,7 @@ func EditOrder(res http.ResponseWriter, req *http.Request, params map[string]str
 			Order.Confirmed = confirmint
 		}
 		wg.Add(1)
-		go tables.Orders.Update(Order, db, orderChan, wg)
+		go models.Orders.Update(Order, db, orderChan, wg)
 		wg.Wait()
 		close(orderChan)
 

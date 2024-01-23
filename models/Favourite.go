@@ -1,4 +1,4 @@
-package tables
+package models
 
 import (
 	"alwadi_markets/middleware"
@@ -66,7 +66,6 @@ func (f Favourite) Get(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
 	ids := ""
 
 	for i, F := range Favourites {
-		fmt.Println(F.Product)
 		if len(Favourites) > 0 {
 			if i == 0 {
 				ids += fmt.Sprintf("%d", F.Product)

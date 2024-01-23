@@ -1,8 +1,9 @@
-package tables
+package models
 
 import (
 	"alwadi_markets/middleware"
 	"database/sql"
+	"fmt"
 	"sync"
 )
 
@@ -30,18 +31,19 @@ func (a AddressTable) Add(db *sql.DB, response chan []byte, wg *sync.WaitGroup) 
 		_, err := db.Exec("INSERT INTO `Address`(`user`, `governorate`, `city`, `street`, `building`, `floor`) VALUES (?, ?, ?, ?, ?, ?)", a.User, a.Governorate, a.City, a.Street, a.Building, a.Floor)
 		if err != nil {
 			Response["Error"] = true
-
+			fmt.Println(err, "err")
 			middleware.SendResponse(response, Response)
 			return
 		}
 
 		Response["Error"] = false
+		fmt.Println(err, "err")
 
 		middleware.SendResponse(response, Response)
 		return
 	}
 
-	Response["Error"] = true
+	Response["Error"] = false
 
 	middleware.SendResponse(response, Response)
 }

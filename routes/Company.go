@@ -3,7 +3,7 @@ package routes
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"net/http"
 	"sync"
@@ -16,7 +16,7 @@ func Company(res http.ResponseWriter, req *http.Request, params map[string]strin
 
 	defer db.Close()
 
-	var Product tables.Product
+	var Product models.Product
 
 	Product.Company = params["name"]
 
@@ -25,12 +25,12 @@ func Company(res http.ResponseWriter, req *http.Request, params map[string]strin
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
-	go tables.Product.GetByCompany(Product, db, ProductChan, wg)
+	go models.Product.GetByCompany(Product, db, ProductChan, wg)
 	wg.Wait()
 
 	close(ProductChan)
 
-	var Products []tables.Product
+	var Products []models.Product
 
 	if err := json.Unmarshal(<-ProductChan, &Products); err != nil {
 		middleware.SendError(err, res)

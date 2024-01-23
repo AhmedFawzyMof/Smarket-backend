@@ -3,7 +3,7 @@ package admin
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -44,13 +44,13 @@ func GetOffers(res http.ResponseWriter, req *http.Request, params map[string]str
 
 	wg.Add(1)
 
-	go tables.Offer.Get(tables.Offer{}, db, Offers, wg)
+	go models.Offer.Get(models.Offer{}, db, Offers, wg)
 
 	wg.Wait()
 
 	close(Offers)
 
-	var offers []tables.Offer
+	var offers []models.Offer
 
 	if err := json.Unmarshal(<-Offers, &offers); err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -79,7 +79,7 @@ func AddOffers(res http.ResponseWriter, req *http.Request, params map[string]str
 
 	var offersMap map[string]interface{}
 
-	var Offer tables.Offer
+	var Offer models.Offer
 
 	if err := json.Unmarshal(body, &offersMap); err != nil {
 		middleware.SendError(err, res)
@@ -109,13 +109,13 @@ func AddOffers(res http.ResponseWriter, req *http.Request, params map[string]str
 
 	wg.Add(1)
 
-	go tables.Offer.Add(Offer, db, Offers, wg)
+	go models.Offer.Add(Offer, db, Offers, wg)
 
 	wg.Wait()
 
 	close(Offers)
 
-	var offers []tables.Offer
+	var offers []models.Offer
 
 	if err := json.Unmarshal(<-Offers, &offers); err != nil {
 		middleware.SendError(err, res)
@@ -144,7 +144,7 @@ func DeleteOffers(res http.ResponseWriter, req *http.Request, params map[string]
 
 		var offersMap map[string]interface{}
 
-		var Offer tables.Offer
+		var Offer models.Offer
 
 		if err := json.Unmarshal(body, &offersMap); err != nil {
 			middleware.SendError(err, res)
@@ -173,13 +173,13 @@ func DeleteOffers(res http.ResponseWriter, req *http.Request, params map[string]
 
 		wg.Add(1)
 
-		go tables.Offer.Delete(Offer, db, Offers, wg)
+		go models.Offer.Delete(Offer, db, Offers, wg)
 
 		wg.Wait()
 
 		close(Offers)
 
-		var offers []tables.Offer
+		var offers []models.Offer
 
 		Err := json.Unmarshal(<-Offers, &offers)
 

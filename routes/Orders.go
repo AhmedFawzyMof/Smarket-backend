@@ -3,7 +3,7 @@ package routes
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -33,7 +33,7 @@ func OrderHistory(res http.ResponseWriter, req *http.Request, params map[string]
 
 		var orderMap map[string]interface{}
 
-		var Order tables.Orders
+		var Order models.Orders
 
 		orderChan := make(chan []byte, 1)
 
@@ -54,12 +54,12 @@ func OrderHistory(res http.ResponseWriter, req *http.Request, params map[string]
 		Order.User = id
 
 		wg.Add(1)
-		go tables.Orders.GetForUser(Order, db, orderChan, wg)
+		go models.Orders.GetForUser(Order, db, orderChan, wg)
 		wg.Wait()
 
 		close(orderChan)
 
-		var OrderResponse []tables.Orders
+		var OrderResponse []models.Orders
 
 		Response := make(map[string]interface{})
 
@@ -88,7 +88,7 @@ func CancelOrder(res http.ResponseWriter, req *http.Request, params map[string]s
 
 		var orderMap map[string]string
 
-		var Order tables.Orders
+		var Order models.Orders
 
 		orderChan := make(chan []byte, 1)
 
@@ -111,7 +111,7 @@ func CancelOrder(res http.ResponseWriter, req *http.Request, params map[string]s
 		Order.Id = order
 
 		wg.Add(1)
-		go tables.Orders.Delete(Order, db, orderChan, wg)
+		go models.Orders.Delete(Order, db, orderChan, wg)
 		wg.Wait()
 
 		close(orderChan)
@@ -142,7 +142,7 @@ func OrderPage(res http.ResponseWriter, req *http.Request, params map[string]str
 
 		var orderMap map[string]string
 
-		var Order tables.Orders
+		var Order models.Orders
 
 		orderChan := make(chan []byte, 1)
 
@@ -165,7 +165,7 @@ func OrderPage(res http.ResponseWriter, req *http.Request, params map[string]str
 		Order.Id = order
 
 		wg.Add(1)
-		go tables.Orders.OrderDitails(Order, db, orderChan, wg)
+		go models.Orders.OrderDitails(Order, db, orderChan, wg)
 		wg.Wait()
 
 		close(orderChan)
@@ -195,14 +195,14 @@ func Order(res http.ResponseWriter, req *http.Request, params map[string]string)
 
 		var OrderReq map[string]interface{}
 
-		var Orders tables.Orders
+		var Orders models.Orders
 
 		if err := json.Unmarshal(body, &OrderReq); err != nil {
 			middleware.SendError(err, res)
 		}
 
 		var Order order
-		var Address tables.AddressTable
+		var Address models.AddressTable
 
 		middleware.FillStruct(OrderReq, &Order)
 
@@ -220,7 +220,7 @@ func Order(res http.ResponseWriter, req *http.Request, params map[string]string)
 
 		addressChan := make(chan []byte, 1)
 
-		orderId, err := tables.Orders.Add(Orders, db)
+		orderId, err := models.Orders.Add(Orders, db)
 
 		if err != nil {
 			middleware.SendError(err, res)
@@ -234,7 +234,7 @@ func Order(res http.ResponseWriter, req *http.Request, params map[string]string)
 
 		wg.Add(1)
 
-		go tables.AddressTable.Add(Address, db, addressChan, wg)
+		go models.AddressTable.Add(Address, db, addressChan, wg)
 
 		wg.Wait()
 
@@ -254,15 +254,15 @@ func Order(res http.ResponseWriter, req *http.Request, params map[string]string)
 }
 
 func createOrderProducts(orderProducts []interface{}, orderId string, db *sql.DB) error {
-	var Orderproducts []tables.OrderProducts
-	var Orderproduct tables.OrderProducts
+	var Orderproducts []models.OrderProducts
+	var Orderproduct models.OrderProducts
 	for _, product := range orderProducts {
 		middleware.FillStructInterface(product, &Orderproduct)
 		Orderproduct.Order = orderId
 		Orderproducts = append(Orderproducts, Orderproduct)
 	}
 	for _, op := range Orderproducts {
-		sucsess := tables.OrderProducts.Add(op, db)
+		sucsess := models.OrderProducts.Add(op, db)
 		if !sucsess {
 			return fmt.Errorf("the product didnt inserted")
 		}

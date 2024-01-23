@@ -3,7 +3,7 @@ package routes
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"net/http"
 	"sync"
@@ -22,16 +22,16 @@ func Home(res http.ResponseWriter, req *http.Request, params map[string]string) 
 
 	wg.Add(3)
 
-	go tables.Category.Get(tables.Category{}, db, Categories, wg)
-	go tables.Product.Get(tables.Product{}, db, Products, wg)
-	go tables.Offer.Get(tables.Offer{}, db, Offers, wg)
+	go models.Category.Get(models.Category{}, db, Categories, wg)
+	go models.Product.Get(models.Product{}, db, Products, wg)
+	go models.Offer.Get(models.Offer{}, db, Offers, wg)
 
 	wg.Wait()
 	close(Products)
 	close(Categories)
 	close(Offers)
 
-	var category []tables.Category
+	var category []models.Category
 
 	err := json.Unmarshal(<-Categories, &category)
 
@@ -39,13 +39,13 @@ func Home(res http.ResponseWriter, req *http.Request, params map[string]string) 
 		middleware.SendError(err, res)
 	}
 
-	var product []tables.Product
+	var product []models.Product
 
 	if err := json.Unmarshal(<-Products, &product); err != nil {
 		middleware.SendError(err, res)
 	}
 
-	var offer []tables.Offer
+	var offer []models.Offer
 
 	if err := json.Unmarshal(<-Offers, &offer); err != nil {
 		middleware.SendError(err, res)

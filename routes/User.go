@@ -3,7 +3,7 @@ package routes
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -24,7 +24,7 @@ func Register(res http.ResponseWriter, req *http.Request, params map[string]stri
 		}
 		var userMap map[string]string
 
-		var User tables.Users
+		var User models.Users
 
 		if err := json.Unmarshal(body, &userMap); err != nil {
 			middleware.SendError(err, res)
@@ -42,7 +42,7 @@ func Register(res http.ResponseWriter, req *http.Request, params map[string]stri
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.Users.Create(User, db, UserChan, wg)
+		go models.Users.Create(User, db, UserChan, wg)
 		wg.Wait()
 
 		close(UserChan)
@@ -73,7 +73,7 @@ func Login(res http.ResponseWriter, req *http.Request, params map[string]string)
 		}
 		var userMap map[string]string
 
-		var User tables.Users
+		var User models.Users
 
 		if err := json.Unmarshal(body, &userMap); err != nil {
 			middleware.SendError(err, res)
@@ -86,7 +86,7 @@ func Login(res http.ResponseWriter, req *http.Request, params map[string]string)
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.Users.GetByEmail(User, db, UserChan, wg)
+		go models.Users.GetByEmail(User, db, UserChan, wg)
 		wg.Wait()
 
 		close(UserChan)
@@ -117,7 +117,7 @@ func Profile(res http.ResponseWriter, req *http.Request, params map[string]strin
 		}
 		var userMap map[string]string
 
-		var User tables.Users
+		var User models.Users
 
 		if err := json.Unmarshal(body, &userMap); err != nil {
 			middleware.SendError(err, res)
@@ -134,14 +134,14 @@ func Profile(res http.ResponseWriter, req *http.Request, params map[string]strin
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.Users.GetById(User, db, UserChan, wg)
+		go models.Users.GetById(User, db, UserChan, wg)
 		wg.Wait()
 
 		close(UserChan)
 
 		UserResponse := make(map[string]interface{})
 
-		var Users tables.Users
+		var Users models.Users
 
 		if err := json.Unmarshal(<-UserChan, &Users); err != nil {
 			middleware.SendError(err, res)

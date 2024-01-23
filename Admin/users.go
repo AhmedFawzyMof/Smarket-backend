@@ -3,7 +3,7 @@ package admin
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/json"
@@ -25,13 +25,13 @@ func GetUsers(res http.ResponseWriter, req *http.Request, params map[string]stri
 
 	wg.Add(1)
 
-	go tables.Users.Get(tables.Users{}, db, Users, wg)
+	go models.Users.Get(models.Users{}, db, Users, wg)
 
 	wg.Wait()
 
 	close(Users)
 
-	var users []tables.Users
+	var users []models.Users
 
 	err := json.Unmarshal(<-Users, &users)
 
@@ -62,7 +62,7 @@ func AdminLogin(res http.ResponseWriter, req *http.Request, params map[string]st
 			panic(err.Error())
 		}
 		var user map[string]string
-		var User tables.Users
+		var User models.Users
 
 		Error := json.Unmarshal(body, &user)
 
@@ -97,7 +97,7 @@ func AdminLogin(res http.ResponseWriter, req *http.Request, params map[string]st
 	}
 }
 
-func checkIsAdmin(u tables.Users, db *sql.DB) (bool, string) {
+func checkIsAdmin(u models.Users, db *sql.DB) (bool, string) {
 	var sampleSecretKey = []byte("Ahmedfawzi made this website")
 
 	sha := sha256.New()
@@ -107,7 +107,7 @@ func checkIsAdmin(u tables.Users, db *sql.DB) (bool, string) {
 
 	FindEmail := db.QueryRow("SELECT * FROM Users WHERE (email, password) = (?, ?)", u.Email, Password)
 
-	var User tables.Users
+	var User models.Users
 
 	err := FindEmail.Scan(&User.Id, &User.Username, &User.Email, &User.Password, &User.Phone, &User.Spare_phone, &User.Role)
 

@@ -3,7 +3,7 @@ package routes
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -25,7 +25,7 @@ func AddFavourite(res http.ResponseWriter, req *http.Request, params map[string]
 		}
 		var favMap map[string]interface{}
 
-		var Favourite tables.Favourite
+		var Favourite models.Favourite
 
 		if err := json.Unmarshal(body, &favMap); err != nil {
 			middleware.SendError(err, res)
@@ -51,7 +51,7 @@ func AddFavourite(res http.ResponseWriter, req *http.Request, params map[string]
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.Favourite.Add(Favourite, db, FavChan, wg)
+		go models.Favourite.Add(Favourite, db, FavChan, wg)
 		wg.Wait()
 
 		close(FavChan)
@@ -83,7 +83,7 @@ func GetFavourite(res http.ResponseWriter, req *http.Request, params map[string]
 
 		var favMap map[string]interface{}
 
-		var Favourite tables.Favourite
+		var Favourite models.Favourite
 
 		if err := json.Unmarshal(body, &favMap); err != nil {
 			middleware.SendError(err, res)
@@ -103,12 +103,12 @@ func GetFavourite(res http.ResponseWriter, req *http.Request, params map[string]
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.Favourite.Get(Favourite, db, FavChan, wg)
+		go models.Favourite.Get(Favourite, db, FavChan, wg)
 		wg.Wait()
 
 		close(FavChan)
 
-		var FavProducts []tables.Product
+		var FavProducts []models.Product
 
 		if err := json.Unmarshal(<-FavChan, &FavProducts); err != nil {
 			middleware.SendError(err, res)
@@ -138,7 +138,7 @@ func DeleteFavourite(res http.ResponseWriter, req *http.Request, params map[stri
 		}
 		var favMap map[string]interface{}
 
-		var Favourite tables.Favourite
+		var Favourite models.Favourite
 
 		if err := json.Unmarshal(body, &favMap); err != nil {
 			middleware.SendError(err, res)
@@ -164,7 +164,7 @@ func DeleteFavourite(res http.ResponseWriter, req *http.Request, params map[stri
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.Favourite.Delete(Favourite, db, FavChan, wg)
+		go models.Favourite.Delete(Favourite, db, FavChan, wg)
 		wg.Wait()
 
 		close(FavChan)

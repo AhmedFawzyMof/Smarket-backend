@@ -3,7 +3,7 @@ package admin
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -44,13 +44,13 @@ func GetCategories(res http.ResponseWriter, req *http.Request, params map[string
 
 	wg.Add(1)
 
-	go tables.Category.Get(tables.Category{}, db, Categories, wg)
+	go models.Category.Get(models.Category{}, db, Categories, wg)
 
 	wg.Wait()
 
 	close(Categories)
 
-	var category []tables.Category
+	var category []models.Category
 
 	if err := json.Unmarshal(<-Categories, &category); err != nil {
 		middleware.SendError(err, res)
@@ -79,7 +79,7 @@ func AddCategories(res http.ResponseWriter, req *http.Request, params map[string
 
 	var categoriesMap map[string]interface{}
 
-	var Category tables.Category
+	var Category models.Category
 
 	if err := json.Unmarshal(body, &categoriesMap); err != nil {
 		middleware.SendError(err, res)
@@ -103,13 +103,13 @@ func AddCategories(res http.ResponseWriter, req *http.Request, params map[string
 
 	wg.Add(1)
 
-	go tables.Category.Add(Category, db, Categories, wg)
+	go models.Category.Add(Category, db, Categories, wg)
 
 	wg.Wait()
 
 	close(Categories)
 
-	var category []tables.Category
+	var category []models.Category
 
 	if err := json.Unmarshal(<-Categories, &category); err != nil {
 		middleware.SendError(err, res)
@@ -137,7 +137,7 @@ func EditCategories(res http.ResponseWriter, req *http.Request, params map[strin
 			middleware.SendError(err, res)
 		}
 		var categoriesMap map[string]interface{}
-		var Category tables.Category
+		var Category models.Category
 
 		if err := json.Unmarshal(body, &categoriesMap); err != nil {
 			middleware.SendError(err, res)
@@ -161,13 +161,13 @@ func EditCategories(res http.ResponseWriter, req *http.Request, params map[strin
 
 		wg.Add(1)
 
-		go tables.Category.Update(Category, db, Categories, wg, name)
+		go models.Category.Update(Category, db, Categories, wg, name)
 
 		wg.Wait()
 
 		close(Categories)
 
-		var category []tables.Category
+		var category []models.Category
 
 		if err := json.Unmarshal(<-Categories, &category); err != nil {
 			middleware.SendError(err, res)
@@ -197,7 +197,7 @@ func DeleteCategories(res http.ResponseWriter, req *http.Request, params map[str
 		}
 
 		var categoriesMap map[string]interface{}
-		var Category tables.Category
+		var Category models.Category
 
 		if err := json.Unmarshal(body, &categoriesMap); err != nil {
 			middleware.SendError(err, res)
@@ -220,13 +220,13 @@ func DeleteCategories(res http.ResponseWriter, req *http.Request, params map[str
 
 		wg.Add(1)
 
-		go tables.Category.Delete(Category, db, Categories, wg)
+		go models.Category.Delete(Category, db, Categories, wg)
 
 		wg.Wait()
 
 		close(Categories)
 
-		var category []tables.Category
+		var category []models.Category
 
 		if err := json.Unmarshal(<-Categories, &category); err != nil {
 			middleware.SendError(err, res)

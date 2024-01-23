@@ -3,7 +3,7 @@ package admin
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -44,13 +44,13 @@ func GetProducts(res http.ResponseWriter, req *http.Request, params map[string]s
 
 	wg.Add(1)
 
-	go tables.Product.Get(tables.Product{}, db, Products, wg)
+	go models.Product.Get(models.Product{}, db, Products, wg)
 
 	wg.Wait()
 
 	close(Products)
 
-	var products []tables.Product
+	var products []models.Product
 
 	if err := json.Unmarshal(<-Products, &products); err != nil {
 		middleware.SendError(err, res)
@@ -78,7 +78,7 @@ func AddProduct(res http.ResponseWriter, req *http.Request, params map[string]st
 	}
 	var productmap map[string]interface{}
 
-	var Product tables.Product
+	var Product models.Product
 
 	if err := json.Unmarshal(body, &productmap); err != nil {
 		middleware.SendError(err, res)
@@ -109,7 +109,7 @@ func AddProduct(res http.ResponseWriter, req *http.Request, params map[string]st
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
-	go tables.Product.Add(Product, db, Products, wg)
+	go models.Product.Add(Product, db, Products, wg)
 	wg.Wait()
 
 	close(Products)
@@ -137,7 +137,7 @@ func UpdateProduct(res http.ResponseWriter, req *http.Request, params map[string
 			middleware.SendError(err, res)
 		}
 		var productmap map[string]interface{}
-		var Product tables.Product
+		var Product models.Product
 
 		if err := json.Unmarshal(body, &productmap); err != nil {
 			middleware.SendError(err, res)
@@ -168,7 +168,7 @@ func UpdateProduct(res http.ResponseWriter, req *http.Request, params map[string
 
 		wg.Add(1)
 
-		go tables.Product.Update(Product, db, Products, wg)
+		go models.Product.Update(Product, db, Products, wg)
 
 		wg.Wait()
 
@@ -199,7 +199,7 @@ func DeleteProduct(res http.ResponseWriter, req *http.Request, params map[string
 		}
 
 		var productmap map[string]interface{}
-		var Product tables.Product
+		var Product models.Product
 
 		if err := json.Unmarshal(body, &Product); err != nil {
 			middleware.SendError(err, res)
@@ -224,7 +224,7 @@ func DeleteProduct(res http.ResponseWriter, req *http.Request, params map[string
 
 		wg.Add(1)
 
-		go tables.Product.Delete(Product, db, Products, wg)
+		go models.Product.Delete(Product, db, Products, wg)
 
 		wg.Wait()
 

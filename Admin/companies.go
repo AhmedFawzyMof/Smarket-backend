@@ -3,7 +3,7 @@ package admin
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -43,13 +43,13 @@ func GetCompanies(res http.ResponseWriter, req *http.Request, params map[string]
 
 	wg.Add(1)
 
-	go tables.Company.Get(tables.Company{}, db, Companies, wg)
+	go models.Company.Get(models.Company{}, db, Companies, wg)
 
 	wg.Wait()
 
 	close(Companies)
 
-	var company []tables.Company
+	var company []models.Company
 
 	if err := json.Unmarshal(<-Companies, &company); err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -77,7 +77,7 @@ func AddCompanies(res http.ResponseWriter, req *http.Request, params map[string]
 	}
 	var companyMap map[string]interface{}
 
-	var Companies tables.Company
+	var Companies models.Company
 
 	if err := json.Unmarshal(body, &companyMap); err != nil {
 		middleware.SendError(err, res)
@@ -100,7 +100,7 @@ func AddCompanies(res http.ResponseWriter, req *http.Request, params map[string]
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
-	go tables.Company.Add(Companies, db, Company, wg)
+	go models.Company.Add(Companies, db, Company, wg)
 	wg.Wait()
 
 	close(Company)
@@ -129,7 +129,7 @@ func EditCompanies(res http.ResponseWriter, req *http.Request, params map[string
 		}
 		var companyMap map[string]interface{}
 
-		var Companies tables.Company
+		var Companies models.Company
 
 		if err := json.Unmarshal(body, &companyMap); err != nil {
 			middleware.SendError(err, res)
@@ -153,7 +153,7 @@ func EditCompanies(res http.ResponseWriter, req *http.Request, params map[string
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.Company.Update(Companies, db, Company, wg, name)
+		go models.Company.Update(Companies, db, Company, wg, name)
 		wg.Wait()
 
 		close(Company)
@@ -185,7 +185,7 @@ func DeleteCompanies(res http.ResponseWriter, req *http.Request, params map[stri
 
 		var companyMap map[string]interface{}
 
-		var Companies tables.Company
+		var Companies models.Company
 
 		if err := json.Unmarshal(body, &companyMap); err != nil {
 			middleware.SendError(err, res)
@@ -207,7 +207,7 @@ func DeleteCompanies(res http.ResponseWriter, req *http.Request, params map[stri
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.Company.Delete(Companies, db, Company, wg)
+		go models.Company.Delete(Companies, db, Company, wg)
 		wg.Wait()
 
 		close(Company)

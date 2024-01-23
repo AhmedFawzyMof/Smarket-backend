@@ -2,7 +2,7 @@ package admin
 
 import (
 	DB "alwadi_markets/db"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,13 +22,13 @@ func GetSubCategories(res http.ResponseWriter, req *http.Request, params map[str
 
 	wg.Add(1)
 
-	go tables.SubCategory.Get(tables.SubCategory{}, db, SubCategories, wg)
+	go models.SubCategory.Get(models.SubCategory{}, db, SubCategories, wg)
 
 	wg.Wait()
 
 	close(SubCategories)
 
-	var subcategory []tables.SubCategory
+	var subcategory []models.SubCategory
 
 	err := json.Unmarshal(<-SubCategories, &subcategory)
 
@@ -58,7 +58,7 @@ func AddSubCategories(res http.ResponseWriter, req *http.Request, params map[str
 	}
 	var subcategoryMap map[string]interface{}
 
-	var Subcategory tables.SubCategory
+	var Subcategory models.SubCategory
 
 	Error := json.Unmarshal(body, &subcategoryMap)
 
@@ -76,7 +76,7 @@ func AddSubCategories(res http.ResponseWriter, req *http.Request, params map[str
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
-	go tables.SubCategory.Add(Subcategory, db, SubCategory, wg)
+	go models.SubCategory.Add(Subcategory, db, SubCategory, wg)
 	wg.Wait()
 
 	close(SubCategory)
@@ -107,7 +107,7 @@ func DeleteSubCategories(res http.ResponseWriter, req *http.Request, params map[
 		}
 		var subcategoryMap map[string]interface{}
 
-		var Subcategory tables.SubCategory
+		var Subcategory models.SubCategory
 
 		Error := json.Unmarshal(body, &subcategoryMap)
 
@@ -123,7 +123,7 @@ func DeleteSubCategories(res http.ResponseWriter, req *http.Request, params map[
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.SubCategory.Delete(Subcategory, db, SubCategory, wg)
+		go models.SubCategory.Delete(Subcategory, db, SubCategory, wg)
 		wg.Wait()
 
 		close(SubCategory)
@@ -155,7 +155,7 @@ func UpdateSubCategories(res http.ResponseWriter, req *http.Request, params map[
 		}
 		var subcategoryMap map[string]interface{}
 
-		var Subcategory tables.SubCategory
+		var Subcategory models.SubCategory
 
 		Error := json.Unmarshal(body, &subcategoryMap)
 
@@ -172,7 +172,7 @@ func UpdateSubCategories(res http.ResponseWriter, req *http.Request, params map[
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.SubCategory.Update(Subcategory, db, SubCategory, wg, name)
+		go models.SubCategory.Update(Subcategory, db, SubCategory, wg, name)
 		wg.Wait()
 
 		close(SubCategory)

@@ -1,4 +1,4 @@
-package tables
+package models
 
 import (
 	"alwadi_markets/middleware"

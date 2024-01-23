@@ -3,7 +3,7 @@ package admin
 import (
 	DB "alwadi_markets/db"
 	"alwadi_markets/middleware"
-	"alwadi_markets/tables"
+	"alwadi_markets/models"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -44,13 +44,13 @@ func GetTypes(res http.ResponseWriter, req *http.Request, params map[string]stri
 
 	wg.Add(1)
 
-	go tables.ProductType.Get(tables.ProductType{}, db, Types, wg)
+	go models.ProductType.Get(models.ProductType{}, db, Types, wg)
 
 	wg.Wait()
 
 	close(Types)
 
-	var Type []tables.ProductType
+	var Type []models.ProductType
 
 	if err := json.Unmarshal(<-Types, &Type); err != nil {
 		middleware.SendError(err, res)
@@ -78,7 +78,7 @@ func AddTypes(res http.ResponseWriter, req *http.Request, params map[string]stri
 	}
 	var productmap map[string]interface{}
 
-	var ProductType tables.ProductType
+	var ProductType models.ProductType
 
 	if err := json.Unmarshal(body, &productmap); err != nil {
 		middleware.SendError(err, res)
@@ -105,7 +105,7 @@ func AddTypes(res http.ResponseWriter, req *http.Request, params map[string]stri
 	wg := &sync.WaitGroup{}
 
 	wg.Add(1)
-	go tables.ProductType.Add(ProductType, db, Types, wg)
+	go models.ProductType.Add(ProductType, db, Types, wg)
 	wg.Wait()
 
 	close(Types)
@@ -134,7 +134,7 @@ func DeleteTypes(res http.ResponseWriter, req *http.Request, params map[string]s
 		}
 		var productmap map[string]interface{}
 
-		var ProductType tables.ProductType
+		var ProductType models.ProductType
 
 		if err := json.Unmarshal(body, &productmap); err != nil {
 			middleware.SendError(err, res)
@@ -158,7 +158,7 @@ func DeleteTypes(res http.ResponseWriter, req *http.Request, params map[string]s
 		wg := &sync.WaitGroup{}
 
 		wg.Add(1)
-		go tables.ProductType.Delete(ProductType, db, Types, wg)
+		go models.ProductType.Delete(ProductType, db, Types, wg)
 		wg.Wait()
 
 		close(Types)

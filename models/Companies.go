@@ -1,4 +1,4 @@
-package tables
+package models
 
 import (
 	"alwadi_markets/middleware"
@@ -8,15 +8,14 @@ import (
 	"sync"
 )
 
-type Category struct {
-	Name  string
-	Image string
+type Company struct {
+	Name string
 }
 
-func (c Category) Add(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
+func (c Company) Add(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
 	defer wg.Done()
 	Response := make(map[string]interface{})
-	_, err := db.Exec("INSERT INTO `Categories`(`name`, `image`) VALUES (?, ?)", c.Name, c.Image)
+	_, err := db.Exec("INSERT INTO `Companies`(`name`) VALUES (?)", c.Name)
 	if err != nil {
 		Response["Error"] = true
 
@@ -29,24 +28,24 @@ func (c Category) Add(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
 	middleware.SendResponse(response, Response)
 }
 
-func (c Category) Get(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
+func (c Company) Get(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
 	defer wg.Done()
-	var Response []Category
-	categories, err := db.Query("SELECT * FROM Categories")
+	var Response []Company
+	companies, err := db.Query("SELECT * FROM Companies")
 	if err != nil {
 		fmt.Println(err.Error())
 	}
 
-	defer categories.Close()
+	defer companies.Close()
 
-	for categories.Next() {
-		var category Category
+	for companies.Next() {
+		var company Company
 
-		if err := categories.Scan(&category.Name, &category.Image); err != nil {
+		if err := companies.Scan(&company.Name); err != nil {
 			panic(err.Error())
 		}
 
-		Response = append(Response, category)
+		Response = append(Response, company)
 	}
 	res, err := json.Marshal(Response)
 	if err != nil {
@@ -55,10 +54,10 @@ func (c Category) Get(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
 	response <- res
 }
 
-func (c Category) Update(db *sql.DB, response chan []byte, wg *sync.WaitGroup, name string) {
+func (c Company) Update(db *sql.DB, response chan []byte, wg *sync.WaitGroup, name string) {
 	defer wg.Done()
 	Response := make(map[string]interface{})
-	_, err := db.Exec("UPDATE `Categories` SET `name`=? WHERE name=?", c.Name, name)
+	_, err := db.Exec("UPDATE `Companies` SET `name`=? WHERE name=?", c.Name, name)
 	if err != nil {
 		Response["Error"] = true
 
@@ -71,10 +70,10 @@ func (c Category) Update(db *sql.DB, response chan []byte, wg *sync.WaitGroup, n
 	middleware.SendResponse(response, Response)
 }
 
-func (c Category) Delete(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
+func (c Company) Delete(db *sql.DB, response chan []byte, wg *sync.WaitGroup) {
 	defer wg.Done()
 	Response := make(map[string]interface{})
-	_, err := db.Exec("DELETE FROM `Categories` WHERE name=?", c.Name)
+	_, err := db.Exec("DELETE FROM `Companies` WHERE name=?", c.Name)
 	if err != nil {
 		Response["Error"] = true
 
