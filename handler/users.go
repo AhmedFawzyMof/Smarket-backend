@@ -1,4 +1,4 @@
-package mange
+package adminHandler
 
 import (
 	"crypto/sha256"

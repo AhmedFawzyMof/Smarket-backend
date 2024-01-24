@@ -1,4 +1,4 @@
-package mange
+package adminHandler
 
 import (
 	"encoding/json"

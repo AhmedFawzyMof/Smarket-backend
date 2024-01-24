@@ -1,7 +1,7 @@
 package router
 
 import (
-	mange "alwadimarkets/admin"
+	adminHandler "alwadimarkets/handler"
 	"alwadimarkets/middleware"
 	R "alwadimarkets/routes"
 	"net/http"
@@ -99,115 +99,115 @@ func Router(w http.ResponseWriter, r *http.Request) {
 
 	routes = append(routes, route{
 		path:    "/admin/login",
-		handler: middleware.WithHeaders(mange.AdminLogin),
+		handler: middleware.WithHeaders(adminHandler.AdminLogin),
 	})
 	routes = append(routes, route{
 		path:    "/admin/products",
-		handler: middleware.WithHeaders(mange.GetProducts),
+		handler: middleware.WithHeaders(adminHandler.GetProducts),
 	})
 	routes = append(routes, route{
 		path:    "/admin/product/add",
-		handler: middleware.WithHeaders(mange.AddProduct),
+		handler: middleware.WithHeaders(adminHandler.AddProduct),
 	})
 	routes = append(routes, route{
 		path:    "/admin/product/edit",
-		handler: middleware.WithHeaders(mange.UpdateProduct),
+		handler: middleware.WithHeaders(adminHandler.UpdateProduct),
 	})
 	routes = append(routes, route{
 		path:    "/admin/product/delete",
-		handler: middleware.WithHeaders(mange.DeleteProduct),
+		handler: middleware.WithHeaders(adminHandler.DeleteProduct),
 	})
 	routes = append(routes, route{
 		path:    "/admin/orders",
-		handler: middleware.WithHeaders(mange.GetOrders),
+		handler: middleware.WithHeaders(adminHandler.GetOrders),
 	})
 	routes = append(routes, route{
 		path:    "/admin/order/edit",
-		handler: middleware.WithHeaders(mange.EditOrder),
+		handler: middleware.WithHeaders(adminHandler.EditOrder),
 	})
 	routes = append(routes, route{
 		path:    "/admin/order/:id",
-		handler: middleware.WithHeaders(mange.OrderPage),
+		handler: middleware.WithHeaders(adminHandler.OrderPage),
 	})
 	routes = append(routes, route{
 		path:    "/admin/users",
-		handler: middleware.WithHeaders(mange.GetUsers),
+		handler: middleware.WithHeaders(adminHandler.GetUsers),
 	})
 	routes = append(routes, route{
 		path:    "/admin/producttype",
-		handler: middleware.WithHeaders(mange.GetTypes),
+		handler: middleware.WithHeaders(adminHandler.GetTypes),
 	})
 	routes = append(routes, route{
 		path:    "/admin/producttype/add",
-		handler: middleware.WithHeaders(mange.AddTypes),
+		handler: middleware.WithHeaders(adminHandler.AddTypes),
 	})
 	routes = append(routes, route{
 		path:    "/admin/producttype/delete",
-		handler: middleware.WithHeaders(mange.DeleteTypes),
+		handler: middleware.WithHeaders(adminHandler.DeleteTypes),
 	})
 	routes = append(routes, route{
 		path:    "/admin/offers",
-		handler: middleware.WithHeaders(mange.GetOffers),
+		handler: middleware.WithHeaders(adminHandler.GetOffers),
 	})
 	routes = append(routes, route{
 		path:    "/admin/offers/add",
-		handler: middleware.WithHeaders(mange.AddOffers),
+		handler: middleware.WithHeaders(adminHandler.AddOffers),
 	})
 	routes = append(routes, route{
 		path:    "/admin/offers/delete",
-		handler: middleware.WithHeaders(mange.DeleteOffers),
+		handler: middleware.WithHeaders(adminHandler.DeleteOffers),
 	})
 	routes = append(routes, route{
 		path:    "/admin/subcategory",
-		handler: middleware.WithHeaders(mange.GetSubCategories),
+		handler: middleware.WithHeaders(adminHandler.GetSubCategories),
 	})
 	routes = append(routes, route{
 		path:    "/admin/subcategory",
-		handler: middleware.WithHeaders(mange.GetSubCategories),
+		handler: middleware.WithHeaders(adminHandler.GetSubCategories),
 	})
 	routes = append(routes, route{
 		path:    "/admin/subcategory/add",
-		handler: middleware.WithHeaders(mange.AddSubCategories),
+		handler: middleware.WithHeaders(adminHandler.AddSubCategories),
 	})
 	routes = append(routes, route{
 		path:    "/admin/subcategory/delete",
-		handler: middleware.WithHeaders(mange.DeleteSubCategories),
+		handler: middleware.WithHeaders(adminHandler.DeleteSubCategories),
 	})
 	routes = append(routes, route{
 		path:    "/admin/subcategory/edit",
-		handler: middleware.WithHeaders(mange.UpdateSubCategories),
+		handler: middleware.WithHeaders(adminHandler.UpdateSubCategories),
 	})
 	routes = append(routes, route{
 		path:    "/admin/companies",
-		handler: middleware.WithHeaders(mange.GetCompanies),
+		handler: middleware.WithHeaders(adminHandler.GetCompanies),
 	})
 	routes = append(routes, route{
 		path:    "/admin/company/add",
-		handler: middleware.WithHeaders(mange.AddCompanies),
+		handler: middleware.WithHeaders(adminHandler.AddCompanies),
 	})
 	routes = append(routes, route{
 		path:    "/admin/company/edit",
-		handler: middleware.WithHeaders(mange.EditCompanies),
+		handler: middleware.WithHeaders(adminHandler.EditCompanies),
 	})
 	routes = append(routes, route{
 		path:    "/admin/company/delete",
-		handler: middleware.WithHeaders(mange.DeleteCompanies),
+		handler: middleware.WithHeaders(adminHandler.DeleteCompanies),
 	})
 	routes = append(routes, route{
 		path:    "/admin/categories",
-		handler: middleware.WithHeaders(mange.GetCategories),
+		handler: middleware.WithHeaders(adminHandler.GetCategories),
 	})
 	routes = append(routes, route{
 		path:    "/admin/category/add",
-		handler: middleware.WithHeaders(mange.AddCategories),
+		handler: middleware.WithHeaders(adminHandler.AddCategories),
 	})
 	routes = append(routes, route{
 		path:    "/admin/category/edit",
-		handler: middleware.WithHeaders(mange.EditCategories),
+		handler: middleware.WithHeaders(adminHandler.EditCategories),
 	})
 	routes = append(routes, route{
 		path:    "/admin/category/delete",
-		handler: middleware.WithHeaders(mange.DeleteCategories),
+		handler: middleware.WithHeaders(adminHandler.DeleteCategories),
 	})
 
 	for _, route := range routes {
