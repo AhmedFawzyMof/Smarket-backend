@@ -1,4 +1,4 @@
-module alwadi_markets
+module alwadimarkets
 
 go 1.21.2
 

@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"sync"
 
-	DB "alwadi_markets/db"
-	"alwadi_markets/middleware"
-	"alwadi_markets/models"
+	DB "alwadimarkets/db"
+	"alwadimarkets/middleware"
+	"alwadimarkets/models"
 )
 
 type order struct {

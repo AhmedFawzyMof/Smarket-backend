@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"alwadi_markets/middleware"
+	"alwadimarkets/middleware"
 )
 
 type AddressTable struct {

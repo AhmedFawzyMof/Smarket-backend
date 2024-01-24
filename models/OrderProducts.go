@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sync"
 
-	"alwadi_markets/middleware"
+	"alwadimarkets/middleware"
 )
 
 type OrderProducts struct {

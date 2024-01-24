@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"sync"
 
-	"alwadi_markets/middleware"
+	"alwadimarkets/middleware"
 
 	"github.com/google/uuid"
 )

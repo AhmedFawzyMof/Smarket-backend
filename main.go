@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"alwadi_markets/router"
+	"alwadimarkets/router"
 )
 
 func main() {

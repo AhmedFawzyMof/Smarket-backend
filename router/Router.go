@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strings"
 
-	Admin "alwadi_markets/admin"
-	"alwadi_markets/middleware"
-	R "alwadi_markets/routes"
+	Admin "alwadimarkets/admin"
+	"alwadimarkets/middleware"
+	R "alwadimarkets/routes"
 )
 
 type route struct {

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"sync"
 
-	DB "alwadi_markets/db"
-	"alwadi_markets/models"
+	DB "alwadimarkets/db"
+	"alwadimarkets/models"
 )
 
 func GetSubCategories(res http.ResponseWriter, req *http.Request, params map[string]string) {
