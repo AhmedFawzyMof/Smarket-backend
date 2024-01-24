@@ -1,4 +1,4 @@
-package administrator
+package mange
 
 import (
 	"crypto/sha256"
