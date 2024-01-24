@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	Admin "alwadimarkets/admin"
+	Admin "alwadimarkets/administrator"
 	"alwadimarkets/middleware"
 	R "alwadimarkets/routes"
 )
