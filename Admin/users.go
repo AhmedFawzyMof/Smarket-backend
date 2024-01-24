@@ -1,9 +1,6 @@
 package admin
 
 import (
-	DB "alwadi_markets/db"
-	"alwadi_markets/middleware"
-	"alwadi_markets/models"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/json"
@@ -11,6 +8,10 @@ import (
 	"io"
 	"net/http"
 	"sync"
+
+	DB "alwadi_markets/db"
+	"alwadi_markets/middleware"
+	"alwadi_markets/models"
 )
 
 func GetUsers(res http.ResponseWriter, req *http.Request, params map[string]string) {

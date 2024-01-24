@@ -1,9 +1,10 @@
 package main
 
 import (
-	"alwadi_markets/router"
 	"fmt"
 	"net/http"
+
+	"alwadi_markets/router"
 )
 
 func main() {

@@ -1,10 +1,11 @@
 package models
 
 import (
-	"alwadi_markets/middleware"
 	"database/sql"
 	"fmt"
 	"sync"
+
+	"alwadi_markets/middleware"
 )
 
 type AddressTable struct {

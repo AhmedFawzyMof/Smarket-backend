@@ -1,15 +1,16 @@
 package routes
 
 import (
-	DB "alwadi_markets/db"
-	"alwadi_markets/middleware"
-	"alwadi_markets/models"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"sync"
+
+	DB "alwadi_markets/db"
+	"alwadi_markets/middleware"
+	"alwadi_markets/models"
 )
 
 type order struct {

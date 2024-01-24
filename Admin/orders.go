@@ -1,14 +1,15 @@
 package admin
 
 import (
-	DB "alwadi_markets/db"
-	"alwadi_markets/middleware"
-	"alwadi_markets/models"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"sync"
+
+	DB "alwadi_markets/db"
+	"alwadi_markets/middleware"
+	"alwadi_markets/models"
 )
 
 func GetOrders(res http.ResponseWriter, req *http.Request, params map[string]string) {

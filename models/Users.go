@@ -1,12 +1,13 @@
 package models
 
 import (
-	"alwadi_markets/middleware"
 	"crypto/sha256"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"sync"
+
+	"alwadi_markets/middleware"
 
 	"github.com/google/uuid"
 )
