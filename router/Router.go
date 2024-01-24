@@ -1,8 +1,8 @@
 package router
 
 import (
-	"alwadi_markets/admin"
 	"alwadi_markets/middleware"
+	"alwadi_markets/admin"
 	R "alwadi_markets/routes"
 	"net/http"
 	"strings"
